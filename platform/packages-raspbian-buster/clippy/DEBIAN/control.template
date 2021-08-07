@@ -6,4 +6,4 @@ Architecture: ARCHITECTURE
 Depends: libstdc++6
 Homepage: https://www.bitpowder.com
 Maintainer: Bernard van Gastel <bvgastel@bitpowder.com>
-Description: Clippy, making clipboard work over SSH
+Description: Clippy, making shared clipboards work over SSH

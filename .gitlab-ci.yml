@@ -9,13 +9,13 @@ variables:
   GIT_STRATEGY: fetch
   GIT_SUBMODULE_STRATEGY: recursive
   BUILD_TYPE: "Release"
-  DEB_PACKAGE_BUILD_OPTIOSN: "-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=$BUILD_TYPE"
+  PACKAGE_BUILD_OPTIONS: "-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=$BUILD_TYPE"
   BINARIES: "clippy-local clippy-remote"
 
 debian-bullseye-amd64:
   extends: .debian-bullseye-amd64
   variables:
-    PACKAGE: packages-debian-bullseye/clippy
+    PACKAGE: platform/packages-debian-bullseye/clippy
   script:
     - mkdir -p $PACKAGE/usr/bin build
     - cd build
@@ -27,11 +27,11 @@ debian-bullseye-amd64:
 ubuntu-hirsute-amd64:
   extends: .ubuntu-hirsute-amd64
   variables:
-    PACKAGE: packages-ubuntu-hirsute/clippy
+    PACKAGE: platform/packages-ubuntu-hirsute/clippy
   script:
     - mkdir -p $PACKAGE/usr/bin build
     - cd build
-    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE ..
+    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE ..
     - cmake --build . --target install
     - cp $BINARIES ../$PACKAGE/usr/bin
     - find ../$PACKAGE
@@ -39,12 +39,34 @@ ubuntu-hirsute-amd64:
 raspbian-buster-armhf:
   extends: .raspbian-buster-armhf
   variables:
-    PACKAGE: packages-raspbian-buster/clippy
+    PACKAGE: platform/packages-raspbian-buster/clippy
   script:
     - mkdir -p $PACKAGE/usr/bin build
     - cd build
-    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE ..
+    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE ..
     - cmake --build . --target install
     - cp $BINARIES ../$PACKAGE/usr/bin
     - find ../$PACKAGE
+
+freebsd13-package-amd64:
+  stage: package
+  needs: []
+  dependencies: []
+  only:
+  - main 
+  - stable 
+  tags: [freebsd-amd64-13]
+  script:
+    - export ABI=`pkg -vv | grep -i '^abi' | cut -d'"' -f2`; echo $ABI
+    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=pkg/$ABI/usr/local .
+    - cmake --build .
+    - echo "cmake --build . --target install" | su
+    - echo "cd pkg/$ABI; ../../platform/freebsd/build-pkg.sh ../../platform/freebsd/MANIFEST_TEMPLATE ../MANIFEST-$ABI ../../post-install ../../post-deinstall" | su
+  after_script:
+    - echo "chown -R gitlab-runner pkg" | su
+  artifacts:
+    expire_in: 1 day
+    paths:
+    - "pkg/*/*.pkg"
+    - "pkg/MANIFEST-*"
 

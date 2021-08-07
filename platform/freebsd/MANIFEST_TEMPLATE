@@ -1,0 +1,21 @@
+#!/bin/sh
+# check MANIFEST of other package with pkg info -R --file [file]
+DIR=`dirname $0`
+cat << EOF
+	name: clippy
+	version: "0.$CI_PIPELINE_IID"
+	origin: net/clippy
+	comment: Clippy, making shared clipboards work over SSH
+	desc: Clippy has a local daemon and a remote utility program.
+	www: https://www.bitpowder.com
+	maintainer: bvgastel@bitpowder.com
+	prefix: /usr/local
+	"deps" : {
+	}
+	scripts: {
+EOF
+printf "	post-install: \"%s\",\n" "`sed 's/"/\\\\"/g' "$1" | tr '\n' '@' | sed 's/@/\\\\n/g'`"
+printf "	post-deinstall: \"%s\",\n" "`sed 's/"/\\\\"/g' "$2" | tr '\n' '@' | sed 's/@/\\\\n/g'`"
+cat << EOF
+	}	
+EOF
