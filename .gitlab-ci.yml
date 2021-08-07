@@ -19,9 +19,8 @@ debian-bullseye-amd64:
   script:
     - mkdir -p $PACKAGE/usr/bin build
     - cd build
-    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE ..
+    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE/usr ..
     - cmake --build . --target install
-    - cp $BINARIES ../$PACKAGE/usr/bin
     - find ../$PACKAGE
 
 ubuntu-hirsute-amd64:
@@ -33,7 +32,6 @@ ubuntu-hirsute-amd64:
     - cd build
     - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE ..
     - cmake --build . --target install
-    - cp $BINARIES ../$PACKAGE/usr/bin
     - find ../$PACKAGE
 
 raspbian-buster-armhf:
@@ -45,7 +43,6 @@ raspbian-buster-armhf:
     - cd build
     - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE ..
     - cmake --build . --target install
-    - cp $BINARIES ../$PACKAGE/usr/bin
     - find ../$PACKAGE
 
 freebsd13-package-amd64:
