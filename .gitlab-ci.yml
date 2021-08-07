@@ -43,7 +43,7 @@ raspbian-buster-armhf:
   script:
     - mkdir -p $PACKAGE/usr/bin build
     - cd build
-    - cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=indigo/util/toolchain-armhf.cmake $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE ..
+    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE ..
     - cmake --build . --target install
     - cp $BINARIES ../$PACKAGE/usr/bin
     - find ../$PACKAGE
