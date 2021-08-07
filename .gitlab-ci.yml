@@ -1,0 +1,50 @@
+include:
+  - project: 'bitpowder/repo'
+    ref: master
+    file: '/.gitlab-ci-template.yml'
+
+variables:
+  DOCKER_DRIVER: overlay # faster docker builds, see https://gitlab.com/gitlab-org/gitlab-ce/issues/21374
+  GIT_DEPTH: "16"
+  GIT_STRATEGY: fetch
+  GIT_SUBMODULE_STRATEGY: recursive
+  BUILD_TYPE: "Release"
+  DEB_PACKAGE_BUILD_OPTIOSN: "-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=$BUILD_TYPE"
+  BINARIES: "clippy-local clippy-remote"
+
+debian-bullseye-amd64:
+  extends: .debian-bullseye-amd64
+  variables:
+    PACKAGE: packages-debian-bullseye/clippy
+  script:
+    - mkdir -p $PACKAGE/usr/bin build
+    - cd build
+    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE ..
+    - cmake --build . --target install
+    - cp $BINARIES ../$PACKAGE/usr/bin
+    - find ../$PACKAGE
+
+ubuntu-hirsute-amd64:
+  extends: .ubuntu-hirsute-amd64
+  variables:
+    PACKAGE: packages-ubuntu-hirsute/clippy
+  script:
+    - mkdir -p $PACKAGE/usr/bin build
+    - cd build
+    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE ..
+    - cmake --build . --target install
+    - cp $BINARIES ../$PACKAGE/usr/bin
+    - find ../$PACKAGE
+
+raspbian-buster-armhf:
+  extends: .raspbian-buster-armhf
+  variables:
+    PACKAGE: packages-raspbian-buster/clippy
+  script:
+    - mkdir -p $PACKAGE/usr/bin build
+    - cd build
+    - cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=indigo/util/toolchain-armhf.cmake $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE ..
+    - cmake --build . --target install
+    - cp $BINARIES ../$PACKAGE/usr/bin
+    - find ../$PACKAGE
+
