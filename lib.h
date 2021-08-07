@@ -3,6 +3,7 @@
 #include <tuple>
 
 #define ENSURE(x) if (!(x)) { ::abort(); }
+#define USING(x) ((void)(x))
 enum ClippyCommand : uint32_t {
   NONE,
   RETRIEVE_CLIPBOARD,
