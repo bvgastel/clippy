@@ -73,7 +73,7 @@ std::tuple<int, int, pid_t> ExecRedirected(const std::vector<std::string>& comma
 		close(pipeForOutput[1]); // close write end
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
 		closefrom(STDERR_FILENO + 1);
-    USING(closeAfterFork)
+    USING(closeAfterFork);
 #else
     for (int fd : closeAfterFork)
       close(fd);
