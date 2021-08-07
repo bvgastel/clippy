@@ -35,8 +35,9 @@ int main(int argc, char *argv[]) {
   // fallback to local clipboard if remote connection is not available
   if (!IsSocket(socket_path)) {
     if (get) {
-      std::string retval = GetClipboard({});
-      std::cout << retval << std::endl;
+      std::string clipboard = GetClipboard({});
+      std::cout << clipboard;
+      std::flush(std::cout);
       return 0;
     }
     if (set) {
@@ -80,7 +81,8 @@ int main(int argc, char *argv[]) {
         return -1;
       // std::cerr << "setting clipboard to " << clipboard << std::endl;
       // SetClipboard(clipboard, {fd});
-      std::cout << clipboard << std::endl;
+      std::cout << clipboard;
+      std::flush(std::cout);
     }
     return 0;
   }
