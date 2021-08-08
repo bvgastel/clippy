@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <pwd.h>
 
 #include <stdexcept>
 
@@ -88,6 +89,16 @@ std::tuple<int, int, pid_t> ExecRedirected(const std::vector<std::string>& comma
 	close(pipeForInput[0]); // close read end
 	close(pipeForOutput[1]); // close write end
 	return std::make_tuple(pipeForOutput[0], pipeForInput[1], child);
+}
+
+std::string GetUsername() {
+	struct passwd _pw;
+	struct passwd *pw;
+	char buffer[256];
+  auto err = getpwuid_r(getuid(), &_pw, buffer, sizeof(buffer), &pw);
+  if (err == 0 && pw)
+    return pw->pw_name;
+  return {};
 }
 
 std::string GetClipboard(std::vector<int> closeAfterFork) {

@@ -7,9 +7,6 @@
 #include "simple-raw.h"
 #include "lib.h"
 
-const char *socket_path = "/tmp/clipboardremote";
-//const char *socket_path = "/tmp/clipboardlocal";
-//char *socket_path = "\0hidden";
 
 std::string GetInput() {
   std::string retval;
@@ -32,8 +29,11 @@ int main(int argc, char *argv[]) {
     set = std::string_view(argv[1]) == "-s";
   }
 
+  std::string socket_path = "/tmp/clipboardremote." + GetUsername();
+  std::cerr << "using socket: " << socket_path << std::endl;
+
   // fallback to local clipboard if remote connection is not available
-  if (!IsSocket(socket_path)) {
+  if (!IsSocket(socket_path.c_str())) {
     if (get) {
       std::string clipboard = GetClipboard({});
       std::cout << clipboard;
@@ -57,12 +57,7 @@ int main(int argc, char *argv[]) {
   struct sockaddr_un addr;
   memset(&addr, 0, sizeof(addr));
   addr.sun_family = AF_UNIX;
-  if (*socket_path == '\0') {
-    *addr.sun_path = '\0';
-    strncpy(addr.sun_path+1, socket_path+1, sizeof(addr.sun_path)-2);
-  } else {
-    strncpy(addr.sun_path, socket_path, sizeof(addr.sun_path)-1);
-  }
+  strncpy(addr.sun_path, socket_path.c_str(), sizeof(addr.sun_path)-1);
 
   if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
     perror("connect error");
