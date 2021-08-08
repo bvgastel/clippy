@@ -29,8 +29,8 @@ int main(int argc, char *argv[]) {
     set = std::string_view(argv[1]) == "-s";
   }
 
-  std::string socket_path = "/tmp/clipboardremote." + GetUsername();
-  std::cerr << "using socket: " << socket_path << std::endl;
+  // std::string socket_path = "/tmp/clipboardremote." + GetUsername();
+  // std::cerr << "using socket: " << socket_path << std::endl;
 
   // fallback to local clipboard if remote connection is not available
   if (!IsSocket(socket_path.c_str())) {
