@@ -1,6 +1,6 @@
 include:
   - project: 'bitpowder/repo'
-    ref: master
+    ref: main
     file: '/.gitlab-ci-template.yml'
 
 variables:

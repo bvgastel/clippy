@@ -8,13 +8,19 @@ A problem is that if  the /tmp/clipboardclient already exists (after an old sess
 
 For custom `neovim` clipboard, see `:help g:clipboard`.
 
-# Daemon on desktop
+# Local (desktop)
 
 Generates a UNIX domain socket on /tmp/clipboard. Once connected, the UNIX domain socket is moved to a temporary location `/tmp/clipboard.32235`, and a new fresh UNIX domain socket is created at /tmp/clipboard.
 
 The daemon should have a config file to configure the local actions. This can be a Lua file.
 
-# Client
+Additionally, your `ssh_config` should have:
+```
+RemoteForward /tmp/clipboardremote.%r /tmp/clipboardlocal.%u
+StreamLocalBindUnlink yes
+```
+
+# Remote
 
 Command line utilities to piggy back files and clipboard commands to the server.
 

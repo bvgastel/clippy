@@ -18,5 +18,7 @@ std::tuple<int, int, pid_t> ExecRedirected(const std::vector<std::string>& comma
 bool IsFile(std::string file);
 bool IsSocket(std::string file);
 
+std::string GetUsername();
+
 std::string GetClipboard(std::vector<int> closeAfterFork);
 bool SetClipboard(std::string clipboard, std::vector<int> closeAfterFork);
