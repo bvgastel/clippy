@@ -12,6 +12,39 @@ variables:
   PACKAGE_BUILD_OPTIONS: "-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=$BUILD_TYPE"
   BINARIES: "clippy-local clippy-remote"
 
+debian-buster-amd64:
+  extends: .debian-buster-amd64
+  variables:
+    PACKAGE: platform/packages-debian-buster/clippy
+  script:
+    - mkdir -p $PACKAGE/usr/bin build
+    - cd build
+    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE/usr ..
+    - cmake --build . --target install
+    - find ../$PACKAGE
+
+debian-buster-armhf:
+  extends: .debian-buster-armhf-on-amd64:
+  variables:
+    PACKAGE: platform/packages-debian-buster/clippy
+  script:
+    - mkdir -p $PACKAGE/usr/bin build
+    - cd build
+    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE/usr ..
+    - cmake --build . --target install
+    - find ../$PACKAGE
+
+debian-buster-arm64:
+  extends: .debian-buster-arm64-on-amd64:
+  variables:
+    PACKAGE: platform/packages-debian-buster/clippy
+  script:
+    - mkdir -p $PACKAGE/usr/bin build
+    - cd build
+    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE/usr ..
+    - cmake --build . --target install
+    - find ../$PACKAGE
+
 debian-bullseye-amd64:
   extends: .debian-bullseye-amd64
   variables:
