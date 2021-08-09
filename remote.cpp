@@ -29,11 +29,12 @@ int main(int argc, char *argv[]) {
     set = std::string_view(argv[1]) == "-s";
   }
 
-  // std::string socket_path = "/tmp/clipboardremote." + GetUsername();
+  std::string socket_path = "/tmp/clipboardremote." + GetUsername();
   // std::cerr << "using socket: " << socket_path << std::endl;
 
   // fallback to local clipboard if remote connection is not available
   if (!IsSocket(socket_path.c_str())) {
+    // std::cerr << "Remote socket is not available, guessing this is a local session." << std::endl;
     if (get) {
       std::string clipboard = GetClipboard({});
       std::cout << clipboard;
@@ -47,6 +48,7 @@ int main(int argc, char *argv[]) {
     }
     return -1;
   }
+  //std::cerr << "Remote socket found" << std::endl;
 
   int fd = socket(AF_UNIX, SOCK_STREAM, 0);
   if (fd < 0) {
