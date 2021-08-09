@@ -17,66 +17,72 @@ debian-buster-amd64:
   variables:
     PACKAGE: platform/packages-debian-buster/clippy
   script:
-    - mkdir -p $PACKAGE/usr/bin build
-    - cd build
-    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE/usr ..
+    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
     - cmake --build . --target install
-    - find ../$PACKAGE
+    - find $PACKAGE
 
 debian-buster-armhf:
-  extends: .debian-buster-armhf-on-amd64:
+  extends: .debian-buster-armhf-on-amd64
   variables:
     PACKAGE: platform/packages-debian-buster/clippy
   script:
-    - mkdir -p $PACKAGE/usr/bin build
-    - cd build
-    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE/usr ..
+    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
     - cmake --build . --target install
-    - find ../$PACKAGE
+    - find $PACKAGE
 
 debian-buster-arm64:
-  extends: .debian-buster-arm64-on-amd64:
+  extends: .debian-buster-arm64-on-amd64
   variables:
     PACKAGE: platform/packages-debian-buster/clippy
   script:
-    - mkdir -p $PACKAGE/usr/bin build
-    - cd build
-    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE/usr ..
+    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
     - cmake --build . --target install
-    - find ../$PACKAGE
+    - find $PACKAGE
 
 debian-bullseye-amd64:
   extends: .debian-bullseye-amd64
   variables:
     PACKAGE: platform/packages-debian-bullseye/clippy
   script:
-    - mkdir -p $PACKAGE/usr/bin build
-    - cd build
-    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE/usr ..
+    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
     - cmake --build . --target install
-    - find ../$PACKAGE
+    - find $PACKAGE
+
+debian-bullseye-armhf:
+  extends: .debian-bullseye-armhf-on-amd64
+  variables:
+    PACKAGE: platform/packages-debian-bullseye/clippy
+  script:
+    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
+    - cmake --build . --target install
+    - find $PACKAGE
+
+debian-bullseye-arm64:
+  extends: .debian-bullseye-arm64-on-amd64
+  variables:
+    PACKAGE: platform/packages-debian-bullseye/clippy
+  script:
+    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
+    - cmake --build . --target install
+    - find $PACKAGE
 
 ubuntu-hirsute-amd64:
   extends: .ubuntu-hirsute-amd64
   variables:
     PACKAGE: platform/packages-ubuntu-hirsute/clippy
   script:
-    - mkdir -p $PACKAGE/usr/bin build
-    - cd build
-    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE ..
+    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
     - cmake --build . --target install
-    - find ../$PACKAGE
+    - find $PACKAGE
 
 raspbian-buster-armhf:
   extends: .raspbian-buster-armhf
   variables:
     PACKAGE: platform/packages-raspbian-buster/clippy
   script:
-    - mkdir -p $PACKAGE/usr/bin build
-    - cd build
-    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=../$PACKAGE ..
+    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
     - cmake --build . --target install
-    - find ../$PACKAGE
+    - find $PACKAGE
 
 freebsd13-package-amd64:
   stage: package
