@@ -61,12 +61,12 @@ let g:clipboard = {
 ```
 # Supported commands
 
-- read clipboard
-- set clipboard
-- view file on desktop
-- open URL in browser on desktop
-- show message on desktop (with DBus)
-- copy file to/from desktop
+- [x] read clipboard
+- [x] set clipboard
+- [ ] view file on desktop
+- [ ] open URL in browser on desktop
+- [ ] show message on desktop (with DBus)
+- [ ] copy file to/from desktop
 
 ToDo:
 - [ ] support connecting from different machines to the same server (probably should do something with randomized /tmp/clipboardremote.some-unique-number, and setting a environment variable which clipboard connection to use. See TOKENS in `man ssh_config`)

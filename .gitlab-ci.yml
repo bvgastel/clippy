@@ -17,7 +17,7 @@ debian-buster-amd64:
   variables:
     PACKAGE: platform/packages-debian-buster/clippy
   script:
-    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
+    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
     - cmake --build . --target install
     - find $PACKAGE
 
@@ -26,7 +26,7 @@ debian-buster-armhf:
   variables:
     PACKAGE: platform/packages-debian-buster/clippy
   script:
-    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
+    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
     - cmake --build . --target install
     - find $PACKAGE
 
@@ -35,7 +35,7 @@ debian-buster-arm64:
   variables:
     PACKAGE: platform/packages-debian-buster/clippy
   script:
-    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
+    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
     - cmake --build . --target install
     - find $PACKAGE
 
@@ -44,7 +44,7 @@ debian-bullseye-amd64:
   variables:
     PACKAGE: platform/packages-debian-bullseye/clippy
   script:
-    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
+    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
     - cmake --build . --target install
     - find $PACKAGE
 
@@ -53,7 +53,7 @@ debian-bullseye-armhf:
   variables:
     PACKAGE: platform/packages-debian-bullseye/clippy
   script:
-    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
+    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
     - cmake --build . --target install
     - find $PACKAGE
 
@@ -62,7 +62,34 @@ debian-bullseye-arm64:
   variables:
     PACKAGE: platform/packages-debian-bullseye/clippy
   script:
-    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
+    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
+    - cmake --build . --target install
+    - find $PACKAGE
+
+ubuntu-focal-amd64:
+  extends: .ubuntu-focal-amd64
+  variables:
+    PACKAGE: platform/packages-ubuntu-focal/clippy
+  script:
+    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
+    - cmake --build . --target install
+    - find $PACKAGE
+
+ubuntu-focal-armhf:
+  extends: .ubuntu-focal-armhf-on-amd64
+  variables:
+    PACKAGE: platform/packages-ubuntu-focal/clippy
+  script:
+    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
+    - cmake --build . --target install
+    - find $PACKAGE
+
+ubuntu-focal-arm64:
+  extends: .ubuntu-focal-arm64-on-amd64
+  variables:
+    PACKAGE: platform/packages-ubuntu-focal/clippy
+  script:
+    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
     - cmake --build . --target install
     - find $PACKAGE
 
@@ -71,7 +98,25 @@ ubuntu-hirsute-amd64:
   variables:
     PACKAGE: platform/packages-ubuntu-hirsute/clippy
   script:
-    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
+    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
+    - cmake --build . --target install
+    - find $PACKAGE
+
+ubuntu-hirsute-armhf:
+  extends: .ubuntu-hirsute-armhf-on-amd64
+  variables:
+    PACKAGE: platform/packages-ubuntu-hirsute/clippy
+  script:
+    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
+    - cmake --build . --target install
+    - find $PACKAGE
+
+ubuntu-hirsute-arm64:
+  extends: .ubuntu-hirsute-arm64-on-amd64
+  variables:
+    PACKAGE: platform/packages-ubuntu-hirsute/clippy
+  script:
+    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
     - cmake --build . --target install
     - find $PACKAGE
 
@@ -80,7 +125,7 @@ raspbian-buster-armhf:
   variables:
     PACKAGE: platform/packages-raspbian-buster/clippy
   script:
-    - cmake -G Ninja $DEB_PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
+    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
     - cmake --build . --target install
     - find $PACKAGE
 
