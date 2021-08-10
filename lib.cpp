@@ -12,7 +12,6 @@
 
 #include <stdexcept>
 #include <fstream>
-#include <filesystem>
 
 bool IsFile(std::string file) {
   struct stat st;
@@ -104,9 +103,8 @@ std::string GetUsername() {
 }
 
 static std::ifstream OpenFile(std::string filename) {
-  auto p = std::filesystem::path(filename.begin(), filename.end());
   std::ifstream infile;
-  infile.open(p, std::ios::binary);
+  infile.open(filename.c_str(), std::ios::binary);
   if (!infile.is_open())
     throw std::invalid_argument("could not open file: " + filename);
 
