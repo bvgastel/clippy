@@ -102,7 +102,12 @@ std::string GetUsername() {
 }
 
 std::string GetClipboard(std::vector<int> closeAfterFork) {
-  auto [rfd, wfd, pid] = ExecRedirected({"xsel", "--clipboard", "--output"}, false, closeAfterFork);
+#if defined(__APPLE__)
+  std::vector<std::string> getClipboardCommand = {"pbpaste"};
+#else
+  std::vector<std::string> getClipboardCommand = {"xsel", "--clipboard", "--output"}
+#endif
+  auto [rfd, wfd, pid] = ExecRedirected(getClipboardCommand, false, closeAfterFork);
   close(wfd);
   std::string retval;
 	char buffer[16384];
@@ -117,7 +122,12 @@ std::string GetClipboard(std::vector<int> closeAfterFork) {
 }
 
 bool SetClipboard(std::string clipboard, std::vector<int> closeAfterFork) {
-  auto [rfd, wfd, pid] = ExecRedirected({"xsel", "--clipboard", "--input"}, false, closeAfterFork);
+#if defined(__APPLE__)
+  std::vector<std::string> setClipboardCommand = {"pbcopy"};
+#else
+  std::vector<std::string> setClipboardCommand = {"xsel", "--clipboard", "--input"}
+#endif
+  auto [rfd, wfd, pid] = ExecRedirected(setClipboardCommand, false, closeAfterFork);
   close(rfd);
   auto bytes = SafeWrite(wfd, clipboard.c_str(), clipboard.size());
   close(wfd);
