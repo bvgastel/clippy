@@ -72,3 +72,4 @@ let g:clipboard = {
 ToDo:
 - [ ] support connecting from different machines to the same server (probably should do something with randomized /tmp/clipboardremote.some-unique-number, and setting a environment variable which clipboard connection to use. See TOKENS in `man ssh_config`)
 - [ ] ability to keep clipboard when changing users (e.g. root user). Relevant: passing environment variables: https://superuser.com/a/480029 . Can be used to indicate a specific socket. (Still have to solve the UNIX socket permissions)
+- [ ] Support Wayland clipboard (without X, e.g. in foot terminal)

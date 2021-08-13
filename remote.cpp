@@ -8,16 +8,8 @@
 #include "lib.h"
 
 
-std::string GetInput() {
-  std::string retval;
-  char buffer[16384];
-  while (true) {
-    auto bytes = SafeRead(STDIN_FILENO, buffer, sizeof(buffer));
-    if (bytes <= 0)
-      break;
-    retval = retval + std::string(buffer, bytes);
-  }
-  return retval;
+std::string GetInput(bool &eof, bool& error) {
+  return Contents(STDIN_FILENO, eof, error, 1024*1024);
 }
 
 int main(int argc, char *argv[]) {
@@ -33,7 +25,7 @@ int main(int argc, char *argv[]) {
   // std::cerr << "using socket: " << socket_path << std::endl;
 
   // fallback to local clipboard if remote connection is not available
-  if (!IsSocket(socket_path.c_str())) {
+  if (!IsSocket(socket_path.c_str()) || IsLocalSession({})) {
     // std::cerr << "Remote socket is not available, guessing this is a local session." << std::endl;
     if (get) {
       std::string clipboard = GetClipboard({});
@@ -42,8 +34,11 @@ int main(int argc, char *argv[]) {
       return 0;
     }
     if (set) {
-      std::string retval = GetInput();
-      SetClipboard(retval, {});
+      bool eof = false;
+      bool error = false;
+      std::string retval = GetInput(eof, error);
+      if (!error)
+        SetClipboard(retval, {});
       return 0;
     }
     return -1;
@@ -87,7 +82,11 @@ int main(int argc, char *argv[]) {
     // set clipboard
     if (!WriteBinary(fd, ClippyCommand::SET_CLIPBOARD))
       return -1;
-    std::string retval = GetInput();
+    bool eof = false;
+    bool error = false;
+    std::string retval = GetInput(eof, error);
+    if (error)
+      return -1;
     if (!WriteBinary(fd, retval))
       return -1;
     return 0;
