@@ -135,8 +135,12 @@ std::string FileContents(std::string filename) {
 }
 
 bool IsOnWSL() {
-  std::string version = FileContents("/proc/version");
-  return version.find("icrosoft") != std::string::npos;
+  // detect kernel
+  // std::string version = FileContents("/proc/version");
+  // return version.find("icrosoft") != std::string::npos;
+  
+  // detect interop: https://docs.microsoft.com/en-us/windows/wsl/interop
+  return IsFile("/proc/sys/fs/binfmt_misc/WSLInterop");
 }
 
 std::string GetClipboard(std::vector<int> closeAfterFork) {
