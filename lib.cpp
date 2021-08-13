@@ -155,7 +155,7 @@ bool IsLocalSession(std::vector<int> closeAfterFork) {
     bool eof = false;
     bool error = false;
     std::string retval = Contents(rfd, eof, error, 1024*1024);
-    error |= retval.size == 1024*1024 && !eof;
+    error |= retval.size() == 1024*1024 && !eof;
     close(rfd);
     // if empty, then command is assumed to have failed
     if (!error && !retval.empty()) {
@@ -187,7 +187,7 @@ std::string GetClipboard(std::vector<int> closeAfterFork) {
   bool eof = false;
   bool error = false;
   std::string retval = Contents(rfd, eof, error, 1024*1024);
-  error |= retval.size == 1024*1024 && !eof;
+  error |= retval.size() == 1024*1024 && !eof;
   close(rfd);
   if (wsl) {
     // `powershell.exe Get-Clipboard` appends \r\n to output, get rid of it
