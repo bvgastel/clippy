@@ -31,16 +31,16 @@ Setup depends on the software you are using:
 Use `tmux-yank` with:
 ```
 # move x clipboard into tmux paste buffer
-bind ] run "tmux set-buffer \"$($HOME/bin/clippy-remote -g)\"; tmux paste-buffer"
-set -g @override_copy_command '$HOME/bin/clippy-remote -s'
+bind ] run "tmux set-buffer \"clippy-remote -g)\"; tmux paste-buffer"
+set -g @override_copy_command 'clippy-remote -s'
 ```
 
 The basic version:
 ```
-bind ] run "tmux set-buffer \"$($HOME/bin/clippy-remote -g)\"; tmux paste-buffer"
+bind ] run "tmux set-buffer \"$(clippy-remote -g)\"; tmux paste-buffer"
 # move tmux copy buffer into x clipboard
-bind -t vi-copy y run "tmux save-buffer - | $HOME/bin/clippy-remote -s"
-bind -t emacs-copy y run "tmux save-buffer - | $HOME/bin/clippy-remote -s"
+bind -t vi-copy y run "tmux save-buffer - | clippy-remote -s"
+bind -t emacs-copy y run "tmux save-buffer - | clippy-remote -s"
 ```
 
 ## neovim
@@ -49,25 +49,27 @@ clipboard+=unnamed,unnamedplus " shared
 let g:clipboard = {
       \   'name': 'ClippyRemoteClipboard',
       \   'copy': {
-      \      '+': $HOME . '/bin/clippy-remote -s',
-      \      '*': $HOME . '/bin/clippy-remote -s',
+      \      '+': 'clippy-remote -s',
+      \      '*': 'clippy-remote -s',
       \    },
       \   'paste': {
-      \      '+': $HOME . '/bin/clippy-remote -g',
-      \      '*': $HOME . '/bin/clippy-remote -g',
+      \      '+': 'clippy-remote -g'
+      \      '*': 'clippy-remote -g',
       \   },
       \   'cache_enabled': 0,
       \ }
 ```
 # Supported commands
 
-- read clipboard
-- set clipboard
-- view file on desktop
-- open URL in browser on desktop
-- show message on desktop (with DBus)
-- copy file to/from desktop
+- [x] read clipboard
+- [x] set clipboard
+- [ ] view file on desktop
+- [ ] open URL in browser on desktop
+- [ ] show message on desktop (with DBus)
+- [ ] copy file to/from desktop
+- [ ] support rendering part of a i3statusbar on desktop: cpu usage, memory usage, custom things, workqueue like nq status (with remote queue)
 
 ToDo:
 - [ ] support connecting from different machines to the same server (probably should do something with randomized /tmp/clipboardremote.some-unique-number, and setting a environment variable which clipboard connection to use. See TOKENS in `man ssh_config`)
 - [ ] ability to keep clipboard when changing users (e.g. root user). Relevant: passing environment variables: https://superuser.com/a/480029 . Can be used to indicate a specific socket. (Still have to solve the UNIX socket permissions)
+- [ ] Support Wayland clipboard (without X, e.g. in foot terminal)

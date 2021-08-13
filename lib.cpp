@@ -12,7 +12,6 @@
 
 #include <stdexcept>
 #include <fstream>
-#include <filesystem>
 
 bool IsFile(std::string file) {
   struct stat st;
@@ -28,30 +27,37 @@ bool IsSocket(std::string file) {
   if (stat(file.c_str(), &st) != 0) {
     if (errno == ENOENT)
       return false;
-    throw std::invalid_argument(std::string("File::IsFile: could not stat() file ") + file);
+    throw std::invalid_argument(std::string("File::IsSocket: could not stat() file ") + file);
   }
   return S_ISSOCK(st.st_mode);
 }
-std::string Contents(int fd, bool& eof, size_t max) {
+std::string Contents(int fd, bool& eof, bool& error, size_t max) {
   std::string retval;
   eof = false;
-  if (fd >= 0) {
-    char buffer[16384];
-    while (retval.size() < max) {
-      auto bytes = read(fd, buffer, std::min(max - retval.size(), sizeof(buffer)));
-      //fprintf(stderr, "File::Contents: %lli -> %i/%s\n", int64_t(bytes), errno, strerror(errno));
-      if (bytes < 0 && errno == EINTR)
-        continue;
-      // if marked non-blocking, it is ok
-      if (bytes == 0 || (bytes < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))) {
-        eof = bytes == 0;
-        break;
-      }
-      if (bytes < 0)
-        throw std::invalid_argument(std::string() + "File::Contents error for fd=" + std::to_string(fd) + "; error=" + std::to_string(errno) + "/" + strerror(errno));
-      assert(bytes > 0);
-      retval = retval + std::string(buffer, bytes);
+  error = false;
+  if (fd < 0)
+    return retval;
+
+  char buffer[16384];
+  while (retval.size() < max) {
+    auto bytes = read(fd, buffer, std::min(max - retval.size(), sizeof(buffer)));
+    //fprintf(stderr, "File::Contents: %lli -> %i/%s\n", int64_t(bytes), errno, strerror(errno));
+    if (bytes < 0 && errno == EINTR)
+      continue;
+    // if marked non-blocking, it is ok
+    if (bytes == 0 || (bytes < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))) {
+      eof = bytes == 0;
+      break;
     }
+    if (bytes < 0) {
+      error = true;
+      eof = true;
+      // DO NOT throw, because that might cause resource leaks (file descriptors not closed)
+      //throw std::invalid_argument(std::string() + "File::Contents error for fd=" + std::to_string(fd) + "; error=" + std::to_string(errno) + "/" + strerror(errno));
+      return {};
+    }
+    assert(bytes > 0);
+    retval.append(buffer, bytes);
   }
   return retval;
 }
@@ -104,9 +110,8 @@ std::string GetUsername() {
 }
 
 static std::ifstream OpenFile(std::string filename) {
-  auto p = std::filesystem::path(filename.begin(), filename.end());
   std::ifstream infile;
-  infile.open(p, std::ios::binary);
+  infile.open(filename.c_str(), std::ios::binary);
   if (!infile.is_open())
     throw std::invalid_argument("could not open file: " + filename);
 
@@ -117,6 +122,8 @@ static std::ifstream OpenFile(std::string filename) {
 }
 
 std::string FileContents(std::string filename) {
+  // FIXME: replace with Contents(fd, ...) version
+  // so there is less code
   auto infile = OpenFile(filename);
 
   std::string retval;
@@ -143,6 +150,32 @@ bool IsOnWSL() {
   return IsFile("/proc/sys/fs/binfmt_misc/WSLInterop");
 }
 
+bool IsLocalSession(std::vector<int> closeAfterFork) {
+  // if TMUX is active (TMUX env var) first query tmux (so the variables are copied from the environment driving starting tmx)
+  if (getenv("TMUX")) {
+    std::vector<std::string> getClipboardCommand = {"tmux", "show-environment", "DISPLAY"};
+    auto [rfd, wfd, pid] = ExecRedirected(getClipboardCommand, false, closeAfterFork);
+    close(wfd);
+    bool eof = false;
+    bool error = false;
+    std::string retval = Contents(rfd, eof, error, 1024*1024);
+    error |= retval.size == 1024*1024 && !eof;
+    close(rfd);
+    // if empty, then command is assumed to have failed
+    if (!error && !retval.empty()) {
+      // tmux outputs "-DISPLAY" if variable is not found and "DISPLAY=foobar" if variable is found
+      return retval.substr(0, 1) != "-";
+    }
+  }
+  // detect if it is a X11 session by checking if DISPLAY is set
+  if (getenv("DISPLAY"))
+    return true;
+  // if (getenv("WAYLAND_DISPLAY"))
+  //   return true;
+  return false;
+}
+
+
 std::string GetClipboard(std::vector<int> closeAfterFork) {
 #if defined(__APPLE__)
   std::vector<std::string> getClipboardCommand = {"pbpaste"};
@@ -155,20 +188,18 @@ std::string GetClipboard(std::vector<int> closeAfterFork) {
 #endif
   auto [rfd, wfd, pid] = ExecRedirected(getClipboardCommand, false, closeAfterFork);
   close(wfd);
-  std::string retval;
-	char buffer[16384];
-  while (true) {
-    auto bytes = SafeRead(rfd, buffer, sizeof(buffer));
-    if (bytes <= 0)
-      break;
-    retval = retval + std::string(buffer, bytes);
-  }
+  bool eof = false;
+  bool error = false;
+  std::string retval = Contents(rfd, eof, error, 1024*1024);
+  error |= retval.size == 1024*1024 && !eof;
   close(rfd);
   if (wsl) {
     // `powershell.exe Get-Clipboard` appends \r\n to output, get rid of it
-    retval = retval.substr(0, retval.size()-2);
+    retval = retval.size() >= 2 ? retval.substr(0, retval.size()-2) : std::string();
   }
-  return retval;
+  // better to return nothing than half an clipboard
+  // this way the user knows something went wrong
+  return !error ? retval : std::string();
 }
 
 bool SetClipboard(std::string clipboard, std::vector<int> closeAfterFork) {
