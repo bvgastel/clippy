@@ -42,8 +42,8 @@ int main(int argc, char *argv[]) {
   }
 
   if (ssh) {
-    std::string local_socket_path = "/tmp/clipboardremote." + GetUsername();
-    std::string remote_socket_path = "/tmp/clipboardlocal." + GetUsername() + "." + std::to_string(getpid());
+    std::string local_socket_path = "/tmp/clipboardlocal." + GetUsername();
+    std::string remote_socket_path = "/tmp/clipboardremote." + GetUsername() + "." + std::to_string(getpid());
     std::vector<std::string> args;
     args.push_back("ssh");
     args.push_back("-o"); args.push_back("SetEnv LC_CLIPPY=" + remote_socket_path);
