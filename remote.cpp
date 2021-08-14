@@ -12,17 +12,50 @@ std::string GetInput(bool &eof, bool& error) {
   return Contents(STDIN_FILENO, eof, error, 1024*1024);
 }
 
+// wrapper around the C execvp so it can be called with C++ strings (easier to work with)
+// always start with the command itself
+int execvp(const std::vector<std::string>& args) {
+	// build argument list
+	const char** c_args = new const char*[args.size()+1];
+	for (size_t i = 0; i < args.size(); ++i) {
+		c_args[i] = args[i].c_str();
+	}
+	c_args[args.size()] = nullptr;
+	// replace current process with new process as specified
+	::execvp(c_args[0], const_cast<char**>(c_args));
+	// if we got this far, there must be an error
+	int retval = errno;
+	// in case of failure, clean up memory
+	delete[] c_args;
+	return retval;
+}
+
 int main(int argc, char *argv[]) {
   bool get = false;
   bool set = false;
-  //if (argc > 1) socket_path=argv[1];
+  bool ssh = false;
+
   if (argc > 1) {
     get = std::string_view(argv[1]) == "-g";
     set = std::string_view(argv[1]) == "-s";
+    ssh = std::string_view(argv[1]) == "--ssh";
   }
 
-  std::string socket_path = "/tmp/clipboardremote." + GetUsername();
+  if (ssh) {
+    std::string local_socket_path = "/tmp/clipboardremote." + GetUsername();
+    std::string remote_socket_path = "/tmp/clipboardlocal." + GetUsername() + "." + std::to_string(getpid());
+    std::vector<std::string> args;
+    args.push_back("ssh");
+    args.push_back("-o"); args.push_back("SetEnv LC_CLIPPY=" + remote_socket_path);
+    args.push_back("-R"); args.push_back(remote_socket_path + ":" + local_socket_path);
+    args.push_back("-o"); args.push_back("StreamLocalBindUnlink yes");
+    for (int i = 2; i < argc; ++i)
+      args.push_back(argv[i]);
+    execvp(args);
+    return 0;
+  }
   // std::cerr << "using socket: " << socket_path << std::endl;
+  std::string socket_path = getenv("LC_CLIPPY");
 
   // fallback to local clipboard if remote connection is not available
   if (!IsSocket(socket_path.c_str()) || IsLocalSession({})) {

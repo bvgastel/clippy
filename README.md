@@ -68,6 +68,7 @@ let g:clipboard = {
 - [ ] show message on desktop (with DBus)
 - [ ] copy file to/from desktop
 - [ ] support rendering part of a i3statusbar on desktop: cpu usage, memory usage, custom things, workqueue like nq status (with remote queue)
+- [ ] remote dmenu session
 
 ToDo:
 - [ ] support connecting from different machines to the same server (probably should do something with randomized /tmp/clipboardremote.some-unique-number, and setting a environment variable which clipboard connection to use. See TOKENS in `man ssh_config`)
