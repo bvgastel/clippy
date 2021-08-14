@@ -55,7 +55,8 @@ int main(int argc, char *argv[]) {
     return 0;
   }
   // std::cerr << "using socket: " << socket_path << std::endl;
-  std::string socket_path = getenv("LC_CLIPPY");
+  auto clippy = getenv("LC_CLIPPY");
+  std::string socket_path = clippy ? clippy : "";
 
   // fallback to local clipboard if remote connection is not available
   if (!IsSocket(socket_path.c_str()) || IsLocalSession({})) {
