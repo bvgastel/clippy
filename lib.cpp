@@ -80,6 +80,11 @@ int execvp(const std::vector<std::string>& args) {
 	return retval;
 }
 
+bool CheckFD(int fd) {
+  int rc = fcntl(fd, F_GETFD);
+  return rc >= 0;
+}
+
 std::tuple<int, int, pid_t> ExecRedirected(const std::vector<std::string>& command, bool redirectError, const std::vector<int>& closeAfterFork) {
 	//std::cout << "executing " << command[0] << std::endl;
 	int pipeForInput[2]; // the input of the child process is going here, so the parent can write to it
@@ -92,19 +97,28 @@ std::tuple<int, int, pid_t> ExecRedirected(const std::vector<std::string>& comma
 		// child
 		close(pipeForInput[1]); // close write end
 		close(pipeForOutput[0]); // close read end
+
 		if (redirectError)
 			dup2(pipeForOutput[1], STDERR_FILENO);
 		dup2(pipeForOutput[1], STDOUT_FILENO);
+		close(pipeForOutput[1]); // close write end
+
 		dup2(pipeForInput[0], STDIN_FILENO);
 		close(pipeForInput[0]); // close read end
-		close(pipeForOutput[1]); // close write end
+
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
 		closefrom(STDERR_FILENO + 1);
     USING(closeAfterFork);
 #else
-    for (int fd : closeAfterFork)
-      close(fd);
+    for (int fd : closeAfterFork) {
+      // especially useful check if early on in the program stdin/stdout are closed, and
+      // there are file descriptors opened (which are assigned fd 0 and 1).
+      if (fd > STDOUT_FILENO + (redirectError?1:0))
+        close(fd);
+    }
 #endif
+    //std::cerr << command[0] << ": " << CheckFD(STDIN_FILENO) << " / " << CheckFD(STDOUT_FILENO) << " / " << CheckFD(STDERR_FILENO) << std::endl;;
+
     execvp(command);
     exit(-1);
 	}

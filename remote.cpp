@@ -96,13 +96,10 @@ int main(int argc, char *argv[]) {
         pid_t pid = fork();
         if (pid == 0) {
           setsid(); // creates new session so that this daemon persists after ssh connection
-          // FIXME: close does not work (xsel gives back file descriptor on stdin and stdout)
-          // probably a good thing to close these file descriptors, to not interfere with stdin/stdout of ssh
-          // close(STDIN_FILENO);
-          // close(STDOUT_FILENO);
           Server(local_socket_path);
           return 0;
         }
+        std::cerr << "Starting clippy daemon (pid=" << pid << ")" << std::endl;
       }
       args.push_back("-R"); args.push_back(remote_socket_path + ":" + local_socket_path);
     }

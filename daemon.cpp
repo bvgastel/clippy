@@ -18,6 +18,10 @@
 // }
 
 void Server(std::string socket_path) {
+  // good thing to close these file descriptors, to not interfere with stdin/stdout of e.g. ssh
+  close(STDIN_FILENO);
+  close(STDOUT_FILENO);
+
   int fd = socket(AF_UNIX, SOCK_STREAM, 0);
   if (fd < 0) {
     perror("socket error");
@@ -51,7 +55,7 @@ void Server(std::string socket_path) {
       perror("accept error");
       continue;
     }
-    // printf("accepted connection\n");
+    //fprintf(stderr, "accepted connection on %i: %i\n", fd, cfd);
 
     bool good = true;
     while (good) {
