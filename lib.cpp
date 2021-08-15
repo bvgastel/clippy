@@ -184,6 +184,7 @@ bool IsLocalSession(std::vector<int> closeAfterFork) {
 std::string GetClipboard(std::vector<int> closeAfterFork) {
 #if defined(__APPLE__)
   std::vector<std::string> getClipboardCommand = {"pbpaste"};
+  bool wsl = false;
 #else
   std::vector<std::string> getClipboardCommand = {"xsel", "--clipboard", "--output"};
   bool wsl = IsOnWSL();
