@@ -137,43 +137,7 @@ std::string GetUsername() {
   return {};
 }
 
-static std::ifstream OpenFile(std::string filename) {
-  std::ifstream infile;
-  infile.open(filename.c_str(), std::ios::binary);
-  if (!infile.is_open())
-    throw std::invalid_argument("could not open file: " + filename);
-
-  // pos == max long on Linux if reading a directory
-  if (!infile.good())
-    throw std::invalid_argument("could not get size of file (possibly a dir): " + filename);
-  return infile;
-}
-
-std::string FileContents(std::string filename) {
-  // FIXME: replace with Contents(fd, ...) version
-  // so there is less code
-  auto infile = OpenFile(filename);
-
-  std::string retval;
-  char buffer[16384];
-
-  do {
-    infile.read(buffer, sizeof(buffer));
-    retval.append(buffer, 0, infile.gcount());
-  } while (infile.good());
-
-  if (infile.bad())
-    throw std::invalid_argument("could not read file: " + filename);
-
-  infile.close();
-  return retval;
-}
-
 bool IsOnWSL() {
-  // detect kernel
-  // std::string version = FileContents("/proc/version");
-  // return version.find("icrosoft") != std::string::npos;
-
   // detect interop: https://docs.microsoft.com/en-us/windows/wsl/interop
   return IsFile("/proc/sys/fs/binfmt_misc/WSLInterop");
 }
