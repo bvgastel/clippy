@@ -243,3 +243,4 @@ bool SetClipboard(std::string clipboard, std::vector<int> closeAfterFork) {
   close(wfd);
   return bytes == clipboard.size();
 }
+

@@ -9,15 +9,20 @@
 
 #define LISTEN_BACKLOG 5
 
-int main(int argc, char *argv[]) {
+// void Server(std::string socket_path) {
+//   std::string socket_path = "/tmp/clipboardlocal." + GetUsername();
+//   std::cerr << "using socket: " << socket_path << std::endl;
+
+//   Server(socket_path);
+//   return 0;
+// }
+
+void Server(std::string socket_path) {
   int fd = socket(AF_UNIX, SOCK_STREAM, 0);
   if (fd < 0) {
     perror("socket error");
     exit(-1);
   }
-
-  std::string socket_path = "/tmp/clipboardlocal." + GetUsername();
-  std::cerr << "using socket: " << socket_path << std::endl;
 
   struct sockaddr_un addr;
   memset(&addr, 0, sizeof(addr));
@@ -46,7 +51,7 @@ int main(int argc, char *argv[]) {
       perror("accept error");
       continue;
     }
-    printf("accepted connection\n");
+    // printf("accepted connection\n");
 
     bool good = true;
     while (good) {
@@ -55,21 +60,23 @@ int main(int argc, char *argv[]) {
         std::string s = ReadBinary(cfd, "", good);
         if (!good)
           break;
-        std::cerr << "receiving new clipboard contents: " << s << std::endl;
+        // std::cerr << "receiving new clipboard contents: " << s << std::endl;
         SetClipboard(s, {fd, cfd});
       } else if (command == ClippyCommand::RETRIEVE_CLIPBOARD) {
         if (!WriteBinary(cfd, ClippyCommand::CLIPBOARD_CONTENTS))
           break;
         std::string clipboard = GetClipboard({fd, cfd});
-        std::cerr << "sending clipboard to remote: " << clipboard << std::endl;
+        // std::cerr << "sending clipboard to remote: " << clipboard << std::endl;
         if (!WriteBinary(cfd, clipboard))
           break;
+      } else if (command == ClippyCommand::PING) {
+        if (!WriteBinary(cfd, ClippyCommand::PONG))
+          break;
+      } else {
+        break;
       }
     }
-    std::cerr << "closing connection" << std::endl;
+    // std::cerr << "closing connection" << std::endl;
     close(cfd);
   }
-
-  return 0;
 }
-

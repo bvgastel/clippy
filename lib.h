@@ -9,7 +9,9 @@ enum ClippyCommand : uint32_t {
   NONE,
   RETRIEVE_CLIPBOARD,
   SET_CLIPBOARD,
-  CLIPBOARD_CONTENTS
+  CLIPBOARD_CONTENTS,
+  PING,
+  PONG,
 };
 
 int execvp(const std::vector<std::string>& args);
@@ -28,3 +30,4 @@ std::string GetUsername();
 
 std::string GetClipboard(std::vector<int> closeAfterFork);
 bool SetClipboard(std::string clipboard, std::vector<int> closeAfterFork);
+

@@ -3,9 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <assert.h>
 
 #include "simple-raw.h"
 #include "lib.h"
+#include "daemon.h"
 
 
 std::string GetInput(bool &eof, bool& error) {
@@ -27,6 +29,40 @@ std::optional<std::string> RemoteSession() {
   if (!IsSocket(socket_path.c_str()))
     return {};
   return {std::move(socket_path)};
+}
+
+bool Active(std::string local_socket_path) {
+  int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+  if (fd < 0) {
+    // should not occur, can not test if there is an active connection this way
+    perror("socket error");
+    exit(-1);
+  }
+
+  struct sockaddr_un addr;
+  memset(&addr, 0, sizeof(addr));
+  addr.sun_family = AF_UNIX;
+  strncpy(addr.sun_path, local_socket_path.c_str(), sizeof(addr.sun_path)-1);
+
+  // FIXME: add time-out?
+  if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
+    //perror("connect error");
+    close(fd);
+    return false;
+  }
+
+  // FIXME: add time-out?
+  if (!WriteBinary(fd, ClippyCommand::PING)) {
+    close(fd);
+    return false;
+  }
+
+  bool good = true;
+  // FIXME: add time-out?
+  uint32_t command = ReadBinary(fd, ClippyCommand::NONE, good);
+  bool retval = command == ClippyCommand::PONG;
+  close(fd);
+  return retval;
 }
 
 int main(int argc, char *argv[]) {
@@ -53,6 +89,21 @@ int main(int argc, char *argv[]) {
     } else {
       // regular
       std::string local_socket_path = "/tmp/clipboardlocal." + GetUsername();
+
+      // if no clippy daemon is active on local host, start one
+      if (!IsSocket(local_socket_path) || !Active(local_socket_path)) {
+        assert(IsLocalSession({}));
+        pid_t pid = fork();
+        if (pid == 0) {
+          setsid(); // creates new session so that this daemon persists after ssh connection
+          // FIXME: close does not work (xsel gives back file descriptor on stdin and stdout)
+          // probably a good thing to close these file descriptors, to not interfere with stdin/stdout of ssh
+          // close(STDIN_FILENO);
+          // close(STDOUT_FILENO);
+          Server(local_socket_path);
+          return 0;
+        }
+      }
       args.push_back("-R"); args.push_back(remote_socket_path + ":" + local_socket_path);
     }
     args.push_back("-o"); args.push_back("StreamLocalBindUnlink yes");
