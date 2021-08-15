@@ -6,20 +6,13 @@ Can be made with `ssh -R /tmp/clipboardremote:/tmp/clipboardlocal host` (tests c
 
 A problem is that if  the /tmp/clipboardclient already exists (after an old session), the proxy of the port won't work. `-o 'StreamLocalBindUnlink=yes'` is supposed to help, however, at least for `-R` mode, it does not. See https://bugzilla.mindrot.org/show_bug.cgi?id=2601 . It works if `StreamLocalBindUnlink yes` is specified in the server config.
 
+# Usage
 
-For custom `neovim` clipboard, see `:help g:clipboard`.
+Clippy should be installed on both the client and the server. Use `clippy --ssh` instead of `ssh` to connect to remote computers. Clippy set additional options automatically for ssh.
 
 # Local (desktop)
 
-Generates a UNIX domain socket on /tmp/clipboard. Once connected, the UNIX domain socket is moved to a temporary location `/tmp/clipboard.32235`, and a new fresh UNIX domain socket is created at /tmp/clipboard.
-
-The daemon should have a config file to configure the local actions. This can be a Lua file.
-
-Additionally, your `ssh_config` should have:
-```
-RemoteForward /tmp/clipboardremote.%r /tmp/clipboardlocal.%u
-StreamLocalBindUnlink yes
-```
+Generates a UNIX domain socket on `/tmp/clipboard.username`, which is forwared. The daemon should have a config file to configure the local actions.
 
 # Remote
 
@@ -27,20 +20,30 @@ Command line utilities to piggy back files and clipboard commands to the server.
 
 Setup depends on the software you are using:
 
+## sshd (on some platforms set automatically)
+
+Your `sshd_config` on the server should have:
+```
+StreamLocalBindUnlink yes
+AcceptEnv LC_CLIPPY
+```
+
 ## tmux
 Use `tmux-yank` with:
 ```
 # move x clipboard into tmux paste buffer
-bind ] run "tmux set-buffer \"clippy-remote -g)\"; tmux paste-buffer"
-set -g @override_copy_command 'clippy-remote -s'
+bind ] run "tmux set-buffer \"clippy -g)\"; tmux paste-buffer"
+set -g @override_copy_command 'clippy -s'
+set-option -g -a update-environment "LC_CLIPPY"
 ```
 
 The basic version:
 ```
-bind ] run "tmux set-buffer \"$(clippy-remote -g)\"; tmux paste-buffer"
+bind ] run "tmux set-buffer \"$(clippy -g)\"; tmux paste-buffer"
 # move tmux copy buffer into x clipboard
-bind -t vi-copy y run "tmux save-buffer - | clippy-remote -s"
-bind -t emacs-copy y run "tmux save-buffer - | clippy-remote -s"
+bind -t vi-copy y run "tmux save-buffer - | clippy -s"
+bind -t emacs-copy y run "tmux save-buffer - | clippy -s"
+set-option -g -a update-environment "LC_CLIPPY"
 ```
 
 ## neovim
@@ -49,16 +52,19 @@ clipboard+=unnamed,unnamedplus " shared
 let g:clipboard = {
       \   'name': 'ClippyRemoteClipboard',
       \   'copy': {
-      \      '+': 'clippy-remote -s',
-      \      '*': 'clippy-remote -s',
+      \      '+': 'clippy -s',
+      \      '*': 'clippy -s',
       \    },
       \   'paste': {
-      \      '+': 'clippy-remote -g'
-      \      '*': 'clippy-remote -g',
+      \      '+': 'clippy -g'
+      \      '*': 'clippy -g',
       \   },
       \   'cache_enabled': 0,
       \ }
 ```
+
+For custom `neovim` clipboard, see `:help g:clipboard`.
+
 # Supported commands
 
 - [x] read clipboard
