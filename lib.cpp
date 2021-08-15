@@ -65,19 +65,19 @@ std::string Read(int fd, bool& eof, bool& error, size_t max) {
 // wrapper around the C execvp so it can be called with C++ strings (easier to work with)
 // always start with the command itself
 int execvp(const std::vector<std::string>& args) {
-	// build argument list
-	const char** c_args = new const char*[args.size()+1];
-	for (size_t i = 0; i < args.size(); ++i) {
-		c_args[i] = args[i].c_str();
-	}
-	c_args[args.size()] = nullptr;
-	// replace current process with new process as specified
-	::execvp(c_args[0], const_cast<char**>(c_args));
-	// if we got this far, there must be an error
-	int retval = errno;
-	// in case of failure, clean up memory
-	delete[] c_args;
-	return retval;
+  // build argument list
+  const char** c_args = new const char*[args.size()+1];
+  for (size_t i = 0; i < args.size(); ++i) {
+    c_args[i] = args[i].c_str();
+  }
+  c_args[args.size()] = nullptr;
+  // replace current process with new process as specified
+  ::execvp(c_args[0], const_cast<char**>(c_args));
+  // if we got this far, there must be an error
+  int retval = errno;
+  // in case of failure, clean up memory
+  delete[] c_args;
+  return retval;
 }
 
 bool CheckFD(int fd) {
@@ -86,28 +86,28 @@ bool CheckFD(int fd) {
 }
 
 std::tuple<int, int, pid_t> ExecRedirected(const std::vector<std::string>& command, bool redirectError, const std::vector<int>& closeAfterFork) {
-	//std::cout << "executing " << command[0] << std::endl;
-	int pipeForInput[2]; // the input of the child process is going here, so the parent can write to it
-	ENSURE(pipe(pipeForInput) == 0);
-	int pipeForOutput[2]; // the output of the child process is directed to this, so the parent can read from it
-	ENSURE(pipe(pipeForOutput) == 0);
+  //std::cout << "executing " << command[0] << std::endl;
+  int pipeForInput[2]; // the input of the child process is going here, so the parent can write to it
+  ENSURE(pipe(pipeForInput) == 0);
+  int pipeForOutput[2]; // the output of the child process is directed to this, so the parent can read from it
+  ENSURE(pipe(pipeForOutput) == 0);
 
-	pid_t child = fork();
-	if (child == 0) {
-		// child
-		close(pipeForInput[1]); // close write end
-		close(pipeForOutput[0]); // close read end
+  pid_t child = fork();
+  if (child == 0) {
+    // child
+    close(pipeForInput[1]); // close write end
+    close(pipeForOutput[0]); // close read end
 
-		if (redirectError)
-			dup2(pipeForOutput[1], STDERR_FILENO);
-		dup2(pipeForOutput[1], STDOUT_FILENO);
-		close(pipeForOutput[1]); // close write end
+    if (redirectError)
+      dup2(pipeForOutput[1], STDERR_FILENO);
+    dup2(pipeForOutput[1], STDOUT_FILENO);
+    close(pipeForOutput[1]); // close write end
 
-		dup2(pipeForInput[0], STDIN_FILENO);
-		close(pipeForInput[0]); // close read end
+    dup2(pipeForInput[0], STDIN_FILENO);
+    close(pipeForInput[0]); // close read end
 
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
-		closefrom(STDERR_FILENO + 1);
+    closefrom(STDERR_FILENO + 1);
     USING(closeAfterFork);
 #else
     for (int fd : closeAfterFork) {
@@ -121,16 +121,16 @@ std::tuple<int, int, pid_t> ExecRedirected(const std::vector<std::string>& comma
 
     execvp(command);
     exit(-1);
-	}
-	close(pipeForInput[0]); // close read end
-	close(pipeForOutput[1]); // close write end
-	return std::make_tuple(pipeForOutput[0], pipeForInput[1], child);
+  }
+  close(pipeForInput[0]); // close read end
+  close(pipeForOutput[1]); // close write end
+  return std::make_tuple(pipeForOutput[0], pipeForInput[1], child);
 }
 
 std::string GetUsername() {
-	struct passwd _pw;
-	struct passwd *pw;
-	char buffer[256];
+  struct passwd _pw;
+  struct passwd *pw;
+  char buffer[256];
   auto err = getpwuid_r(getuid(), &_pw, buffer, sizeof(buffer), &pw);
   if (err == 0 && pw)
     return pw->pw_name;
@@ -173,30 +173,30 @@ bool IsOnWSL() {
   // detect kernel
   // std::string version = FileContents("/proc/version");
   // return version.find("icrosoft") != std::string::npos;
-  
+
   // detect interop: https://docs.microsoft.com/en-us/windows/wsl/interop
   return IsFile("/proc/sys/fs/binfmt_misc/WSLInterop");
 }
 
 std::optional<std::string> GetTMUXVariable(std::string variable, std::vector<int> closeAfterFork) {
-    std::vector<std::string> getClipboardCommand = {"tmux", "show-environment", variable};
-    auto [rfd, wfd, pid] = ExecRedirected(getClipboardCommand, false, closeAfterFork);
-    close(wfd);
-    bool eof = false;
-    bool error = false;
-    std::string retval = Read(rfd, eof, error, 1024*1024);
-    error |= retval.size() == 1024*1024 && !eof;
-    close(rfd);
+  std::vector<std::string> getClipboardCommand = {"tmux", "show-environment", variable};
+  auto [rfd, wfd, pid] = ExecRedirected(getClipboardCommand, false, closeAfterFork);
+  close(wfd);
+  bool eof = false;
+  bool error = false;
+  std::string retval = Read(rfd, eof, error, 1024*1024);
+  error |= retval.size() == 1024*1024 && !eof;
+  close(rfd);
 
-    if (!error && eof) {
-      // tmux outputs "-DISPLAY" if variable is not found, and "DISPLAY=foobar" if variable is found
-      auto pos = retval.find("=");
-      if (pos != retval.npos) {
-        retval = retval.substr(pos+1);
-        return {retval};
-      }
+  if (!error && eof) {
+    // tmux outputs "-DISPLAY" if variable is not found, and "DISPLAY=foobar" if variable is found
+    auto pos = retval.find("=");
+    if (pos != retval.npos) {
+      retval = retval.substr(pos+1);
+      return {retval};
     }
-    return {};
+  }
+  return {};
 }
 
 bool IsLocalSession(std::vector<int> closeAfterFork) {

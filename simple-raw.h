@@ -39,11 +39,11 @@ std::map<K,V> ReadBinary(int in, const std::map<K, V>& defaultValue, bool& good)
 [[nodiscard]] bool WriteBinary(int out, uint64_t number);
 [[nodiscard]] bool WriteBinary(int out, const char* data, uint32_t size);
 [[nodiscard]] inline bool WriteBinary(int out, const char* str) {
-	auto len = str ? strlen(str) : 0;
-	return WriteBinary(out, str, len < std::numeric_limits<uint32_t>::max() ? uint32_t(len) : 0);
+  auto len = str ? strlen(str) : 0;
+  return WriteBinary(out, str, len < std::numeric_limits<uint32_t>::max() ? uint32_t(len) : 0);
 }
 [[nodiscard]] inline bool WriteBinary(int out, const std::string& str) {
-	return WriteBinary(out, str.c_str(), str.length() < std::numeric_limits<uint32_t>::max() ? uint32_t(str.length()) : 0);
+  return WriteBinary(out, str.c_str(), str.length() < std::numeric_limits<uint32_t>::max() ? uint32_t(str.length()) : 0);
 }
 template <typename T>
 [[nodiscard]] bool WriteBinary(int out, const std::vector<T>& vector) {
