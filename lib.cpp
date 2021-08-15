@@ -160,8 +160,14 @@ std::optional<std::string> GetTMUXVariable(std::string variable, std::vector<int
     error |= retval.size() == 1024*1024 && !eof;
     close(rfd);
 
-    if (!error && eof)
-      return retval;
+    if (!error && eof) {
+      // tmux outputs "-DISPLAY" if variable is not found, and "DISPLAY=foobar" if variable is found
+      auto pos = retval.find("=");
+      if (pos != retval.npos) {
+        retval = retval.substr(pos+1);
+        return {retval};
+      }
+    }
     return {};
 }
 
@@ -170,13 +176,11 @@ bool IsLocalSession(std::vector<int> closeAfterFork) {
   if (getenv("TMUX")) {
     // if empty, then command is assumed to have failed
     auto display = GetTMUXVariable("DISPLAY", closeAfterFork);
-    if (display && !display->empty()) {
-      // tmux outputs "-DISPLAY" if variable is not found and "DISPLAY=foobar" if variable is found
-      return display->substr(0, 1) != "-";
-    }
+    return display && display->size() > 0;
   }
   // detect if it is a X11 session by checking if DISPLAY is set
-  if (getenv("DISPLAY"))
+  auto display = getenv("DISPLAY");
+  if (display && strlen(display) > 0)
     return true;
   // if (getenv("WAYLAND_DISPLAY"))
   //   return true;
