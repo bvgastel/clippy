@@ -31,7 +31,7 @@ bool IsSocket(std::string file) {
   }
   return S_ISSOCK(st.st_mode);
 }
-std::string Contents(int fd, bool& eof, bool& error, size_t max) {
+std::string Read(int fd, bool& eof, bool& error, size_t max) {
   std::string retval;
   eof = false;
   error = false;
@@ -41,7 +41,7 @@ std::string Contents(int fd, bool& eof, bool& error, size_t max) {
   char buffer[16384];
   while (retval.size() < max) {
     auto bytes = read(fd, buffer, std::min(max - retval.size(), sizeof(buffer)));
-    //fprintf(stderr, "File::Contents: %lli -> %i/%s\n", int64_t(bytes), errno, strerror(errno));
+    //fprintf(stderr, "File::Read: %lli -> %i/%s\n", int64_t(bytes), errno, strerror(errno));
     if (bytes < 0 && errno == EINTR)
       continue;
     // if marked non-blocking, it is ok
@@ -53,7 +53,7 @@ std::string Contents(int fd, bool& eof, bool& error, size_t max) {
       error = true;
       eof = true;
       // DO NOT throw, because that might cause resource leaks (file descriptors not closed)
-      //throw std::invalid_argument(std::string() + "File::Contents error for fd=" + std::to_string(fd) + "; error=" + std::to_string(errno) + "/" + strerror(errno));
+      //throw std::invalid_argument(std::string() + "File::Read: error for fd=" + std::to_string(fd) + "; error=" + std::to_string(errno) + "/" + strerror(errno));
       return {};
     }
     assert(bytes > 0);
@@ -184,7 +184,7 @@ std::optional<std::string> GetTMUXVariable(std::string variable, std::vector<int
     close(wfd);
     bool eof = false;
     bool error = false;
-    std::string retval = Contents(rfd, eof, error, 1024*1024);
+    std::string retval = Read(rfd, eof, error, 1024*1024);
     error |= retval.size() == 1024*1024 && !eof;
     close(rfd);
 
@@ -230,7 +230,7 @@ std::string GetClipboard(std::vector<int> closeAfterFork) {
   close(wfd);
   bool eof = false;
   bool error = false;
-  std::string retval = Contents(rfd, eof, error, 1024*1024);
+  std::string retval = Read(rfd, eof, error, 1024*1024);
   error |= retval.size() == 1024*1024 && !eof;
   close(rfd);
   if (wsl) {

@@ -11,7 +11,7 @@
 
 
 std::string GetInput(bool &eof, bool& error) {
-  return Contents(STDIN_FILENO, eof, error, 1024*1024);
+  return Read(STDIN_FILENO, eof, error, 1024*1024);
 }
 
 std::optional<std::string> RemoteSession() {

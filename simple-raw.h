@@ -7,7 +7,8 @@
 #include <vector>
 #include <limits>
 
-[[nodiscard]] size_t SafeRead(int fd, char* ptr, size_t size);
+[[nodiscard]] std::pair<size_t,int> SafeRead(int fd, char* ptr, size_t size);
+// if retval != size then errno is set
 [[nodiscard]] size_t SafeWrite(int fd, const char* ptr, size_t size);
 
 uint32_t ReadBinary(int in, uint32_t defaultValue, bool& good);
