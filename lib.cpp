@@ -62,6 +62,24 @@ std::string Contents(int fd, bool& eof, bool& error, size_t max) {
   return retval;
 }
 
+// wrapper around the C execvp so it can be called with C++ strings (easier to work with)
+// always start with the command itself
+int execvp(const std::vector<std::string>& args) {
+	// build argument list
+	const char** c_args = new const char*[args.size()+1];
+	for (size_t i = 0; i < args.size(); ++i) {
+		c_args[i] = args[i].c_str();
+	}
+	c_args[args.size()] = nullptr;
+	// replace current process with new process as specified
+	::execvp(c_args[0], const_cast<char**>(c_args));
+	// if we got this far, there must be an error
+	int retval = errno;
+	// in case of failure, clean up memory
+	delete[] c_args;
+	return retval;
+}
+
 std::tuple<int, int, pid_t> ExecRedirected(const std::vector<std::string>& command, bool redirectError, const std::vector<int>& closeAfterFork) {
 	//std::cout << "executing " << command[0] << std::endl;
 	int pipeForInput[2]; // the input of the child process is going here, so the parent can write to it
@@ -87,12 +105,8 @@ std::tuple<int, int, pid_t> ExecRedirected(const std::vector<std::string>& comma
     for (int fd : closeAfterFork)
       close(fd);
 #endif
-		char** args = static_cast<char**>(alloca(sizeof(const char*) * (command.size() + 1)));
-		for (size_t i = 0; i < command.size(); ++i)
-			args[i] = const_cast<char*>(command[i].c_str());
-		args[command.size()] = nullptr;
-		execvp(command[0].c_str(), args);
-		exit(-1);
+    execvp(command);
+    exit(-1);
 	}
 	close(pipeForInput[0]); // close read end
 	close(pipeForOutput[1]); // close write end

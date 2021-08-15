@@ -12,24 +12,6 @@ std::string GetInput(bool &eof, bool& error) {
   return Contents(STDIN_FILENO, eof, error, 1024*1024);
 }
 
-// wrapper around the C execvp so it can be called with C++ strings (easier to work with)
-// always start with the command itself
-int execvp(const std::vector<std::string>& args) {
-	// build argument list
-	const char** c_args = new const char*[args.size()+1];
-	for (size_t i = 0; i < args.size(); ++i) {
-		c_args[i] = args[i].c_str();
-	}
-	c_args[args.size()] = nullptr;
-	// replace current process with new process as specified
-	::execvp(c_args[0], const_cast<char**>(c_args));
-	// if we got this far, there must be an error
-	int retval = errno;
-	// in case of failure, clean up memory
-	delete[] c_args;
-	return retval;
-}
-
 std::optional<std::string> RemoteSession() {
   // tmux makes things difficult. Creation of the session and the active session are
   // seperate things. So we have to detect if tmux is active, and check the active
