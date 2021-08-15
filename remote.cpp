@@ -37,7 +37,10 @@ std::optional<std::string> RemoteSession() {
   std::string socket_path;
   if (getenv("TMUX")) {
     auto clippy = GetTMUXVariable("LC_CLIPPY", {});
-    socket_path = clippy ? *clippy : "";
+    if (clippy) {
+      auto pos = clippy->find("=");
+      socket_path = pos != clippy->npos ? clippy->substr(pos+1) : "";
+    }
   } else {
     auto clippy = getenv("LC_CLIPPY");
     socket_path = clippy ? clippy : "";
