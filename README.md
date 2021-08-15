@@ -6,19 +6,25 @@ Can be made with `ssh -R /tmp/clipboardremote:/tmp/clipboardlocal host` (tests c
 
 A problem is that if  the /tmp/clipboardclient already exists (after an old session), the proxy of the port won't work. `-o 'StreamLocalBindUnlink=yes'` is supposed to help, however, at least for `-R` mode, it does not. See https://bugzilla.mindrot.org/show_bug.cgi?id=2601 . It works if `StreamLocalBindUnlink yes` is specified in the server config.
 
+# Installation
+
+For macOS:
+```
+brew tap bitpowder/clippy https://bitpowder.com:2443/bvgastel/clippy.git
+brew install --HEAD bitpowder/clippy/clippy
+```
+Update with `brew reinstall --HEAD bitpowder/clippy/clippy`.
+
+For other platforms add the [bitpowder repository](https://bitpowder.com:2443/bitpowder/repo).
+
 # Usage
 
 Clippy should be installed on both the client and the server. Use `clippy --ssh` instead of `ssh` to connect to remote computers. Clippy set additional options automatically for ssh.
+If no clippy daemon is running, it automatically starts a clippy daemon that listens on a UNIX domain socket named `/tmp/clipboard.username`, which is forwarded through SSH. The daemon can have a config file to configure the local actions .
 
-# Local (desktop)
+# Set up for specific progrms
 
-Generates a UNIX domain socket on `/tmp/clipboard.username`, which is forwared. The daemon should have a config file to configure the local actions.
-
-# Remote
-
-Command line utilities to piggy back files and clipboard commands to the server.
-
-Setup depends on the software you are using:
+Command line utilities to piggy back files and clipboard commands to the server. Some software needs custom config options. Setup depends on the software you are using:
 
 ## sshd (on some platforms set automatically)
 
