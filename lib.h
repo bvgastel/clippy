@@ -1,6 +1,7 @@
 #include <string>
 #include <vector>
 #include <tuple>
+#include <optional>
 
 #define ENSURE(x) if (!(x)) { ::abort(); }
 #define USING(x) ((void)(x))
@@ -18,6 +19,7 @@ std::tuple<int, int, pid_t> ExecRedirected(const std::vector<std::string>& comma
 bool IsFile(std::string file);
 bool IsSocket(std::string file);
 
+std::optional<std::string> GetTMUXVariable(std::string variable, std::vector<int> closeAfterFork);
 bool IsLocalSession(std::vector<int> closeAfterFork);
 
 std::string GetUsername();

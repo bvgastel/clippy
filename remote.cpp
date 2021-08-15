@@ -30,6 +30,23 @@ int execvp(const std::vector<std::string>& args) {
 	return retval;
 }
 
+std::optional<std::string> RemoteSession() {
+  // tmux makes things difficult. Creation of the session and the active session are
+  // seperate things. So we have to detect if tmux is active, and check the active
+  // environment used when `tmux attach` was run.
+  std::string socket_path;
+  if (getenv("TMUX")) {
+    auto clippy = GetTMUXVariable("LC_CLIPPY", {});
+    socket_path = clippy ? *clippy : "";
+  } else {
+    auto clippy = getenv("LC_CLIPPY");
+    socket_path = clippy ? clippy : "";
+  }
+  if (!IsSocket(socket_path.c_str()))
+    return {};
+  return {std::move(socket_path)};
+}
+
 int main(int argc, char *argv[]) {
   bool get = false;
   bool set = false;
@@ -42,12 +59,20 @@ int main(int argc, char *argv[]) {
   }
 
   if (ssh) {
-    std::string local_socket_path = "/tmp/clipboardlocal." + GetUsername();
+    auto nestedRemoteSession = RemoteSession();
     std::string remote_socket_path = "/tmp/clipboardremote." + GetUsername() + "." + std::to_string(getpid());
+
     std::vector<std::string> args;
     args.push_back("ssh");
     args.push_back("-o"); args.push_back("SetEnv LC_CLIPPY=" + remote_socket_path);
-    args.push_back("-R"); args.push_back(remote_socket_path + ":" + local_socket_path);
+    // nested session
+    if (nestedRemoteSession) {
+      args.push_back("-R"); args.push_back(remote_socket_path + ":" + *nestedRemoteSession);
+    } else {
+      // regular
+      std::string local_socket_path = "/tmp/clipboardlocal." + GetUsername();
+      args.push_back("-R"); args.push_back(remote_socket_path + ":" + local_socket_path);
+    }
     args.push_back("-o"); args.push_back("StreamLocalBindUnlink yes");
     for (int i = 2; i < argc; ++i)
       args.push_back(argv[i]);
@@ -55,11 +80,10 @@ int main(int argc, char *argv[]) {
     return 0;
   }
   // std::cerr << "using socket: " << socket_path << std::endl;
-  auto clippy = getenv("LC_CLIPPY");
-  std::string socket_path = clippy ? clippy : "";
+  auto remoteSession = RemoteSession();
 
   // fallback to local clipboard if remote connection is not available
-  if (!IsSocket(socket_path.c_str()) || IsLocalSession({})) {
+  if (!remoteSession) {
     // std::cerr << "Remote socket is not available, guessing this is a local session." << std::endl;
     if (get) {
       std::string clipboard = GetClipboard({});
@@ -88,7 +112,7 @@ int main(int argc, char *argv[]) {
   struct sockaddr_un addr;
   memset(&addr, 0, sizeof(addr));
   addr.sun_family = AF_UNIX;
-  strncpy(addr.sun_path, socket_path.c_str(), sizeof(addr.sun_path)-1);
+  strncpy(addr.sun_path, remoteSession->c_str(), sizeof(addr.sun_path)-1);
 
   if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
     perror("connect error");

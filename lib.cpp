@@ -150,10 +150,8 @@ bool IsOnWSL() {
   return IsFile("/proc/sys/fs/binfmt_misc/WSLInterop");
 }
 
-bool IsLocalSession(std::vector<int> closeAfterFork) {
-  // if TMUX is active (TMUX env var) first query tmux (so the variables are copied from the environment driving starting tmx)
-  if (getenv("TMUX")) {
-    std::vector<std::string> getClipboardCommand = {"tmux", "show-environment", "DISPLAY"};
+std::optional<std::string> GetTMUXVariable(std::string variable, std::vector<int> closeAfterFork) {
+    std::vector<std::string> getClipboardCommand = {"tmux", "show-environment", variable};
     auto [rfd, wfd, pid] = ExecRedirected(getClipboardCommand, false, closeAfterFork);
     close(wfd);
     bool eof = false;
@@ -161,10 +159,20 @@ bool IsLocalSession(std::vector<int> closeAfterFork) {
     std::string retval = Contents(rfd, eof, error, 1024*1024);
     error |= retval.size() == 1024*1024 && !eof;
     close(rfd);
+
+    if (!error && eof)
+      return retval;
+    return {};
+}
+
+bool IsLocalSession(std::vector<int> closeAfterFork) {
+  // if TMUX is active (TMUX env var) first query tmux (so the variables are copied from the environment driving starting tmx)
+  if (getenv("TMUX")) {
     // if empty, then command is assumed to have failed
-    if (!error && !retval.empty()) {
+    auto display = GetTMUXVariable("DISPLAY", closeAfterFork);
+    if (display && !display->empty()) {
       // tmux outputs "-DISPLAY" if variable is not found and "DISPLAY=foobar" if variable is found
-      return retval.substr(0, 1) != "-";
+      return display->substr(0, 1) != "-";
     }
   }
   // detect if it is a X11 session by checking if DISPLAY is set
