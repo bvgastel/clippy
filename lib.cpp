@@ -57,7 +57,7 @@ std::string Read(int fd, bool& eof, bool& error, size_t max) {
       return {};
     }
     assert(bytes > 0);
-    retval.append(buffer, bytes);
+    retval.append(buffer, size_t(bytes));
   }
   return retval;
 }

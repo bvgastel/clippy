@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
         if (pid == 0) {
           setsid(); // creates new session so that this daemon persists after ssh connection
           Server(local_socket_path);
-          return 0;
+          // Server() does not return
         }
         std::cerr << "Starting clippy daemon (pid=" << pid << ")" << std::endl;
       }

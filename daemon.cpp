@@ -17,7 +17,7 @@
 //   return 0;
 // }
 
-void Server(std::string socket_path) {
+[[noreturn]] void Server(std::string socket_path) {
   // good thing to close these file descriptors, to not interfere with stdin/stdout of e.g. ssh
   close(STDIN_FILENO);
   close(STDOUT_FILENO);

@@ -1,3 +1,3 @@
 #include <string>
 
-void Server(std::string socket_path);
+[[noreturn]] void Server(std::string socket_path);
