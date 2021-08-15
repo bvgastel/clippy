@@ -22,9 +22,11 @@ std::optional<std::string> RemoteSession() {
   if (getenv("TMUX")) {
     auto clippy = GetTMUXVariable("LC_CLIPPY", {});
     socket_path = clippy ? *clippy : "";
+    //std::cerr << "using tmux clippy var: " << socket_path << std::endl;
   } else {
     auto clippy = getenv("LC_CLIPPY");
     socket_path = clippy ? clippy : "";
+    //std::cerr << "using direct clippy var: " << socket_path << std::endl;
   }
   if (!IsSocket(socket_path.c_str()))
     return {};
@@ -109,8 +111,8 @@ int main(int argc, char *argv[]) {
     execvp(args);
     return 0;
   }
-  // std::cerr << "using socket: " << socket_path << std::endl;
   auto remoteSession = RemoteSession();
+  //std::cerr << "using socket: " << *remoteSession << std::endl;
 
   // fallback to local clipboard if remote connection is not available
   if (!remoteSession) {

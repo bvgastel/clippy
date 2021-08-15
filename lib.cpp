@@ -156,7 +156,8 @@ std::optional<std::string> GetTMUXVariable(std::string variable, std::vector<int
     // tmux outputs "-DISPLAY" if variable is not found, and "DISPLAY=foobar" if variable is found
     auto pos = retval.find("=");
     if (pos != retval.npos) {
-      retval = retval.substr(pos+1);
+      // do not copy trailing '\n' from tmux
+      retval = retval.substr(pos+1, retval.size()-pos-2);
       return {retval};
     }
   }
