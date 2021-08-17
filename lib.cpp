@@ -104,8 +104,12 @@ std::tuple<int, int, pid_t> ExecRedirected(const std::vector<std::string>& comma
     dup2(pipeForOutput[1], STDOUT_FILENO);
     close(pipeForOutput[1]); // close write end
 
-    dup2(pipeForInput[0], STDIN_FILENO);
-    close(pipeForInput[0]); // close read end
+    // if fd=0 was not used
+    // pipeForInput[0] will be allocated on fd=0
+    if (pipeForInput[0] != STDIN_FILENO) {
+      dup2(pipeForInput[0], STDIN_FILENO);
+      close(pipeForInput[0]); // close read end
+    }
 
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
     closefrom(STDERR_FILENO + 1);
