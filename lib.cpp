@@ -13,6 +13,7 @@
 
 #include <stdexcept>
 #include <fstream>
+#include <sstream>
 
 bool IsFile(std::string file) {
   struct stat st;
@@ -230,19 +231,29 @@ bool SetClipboard(std::string clipboard, std::vector<int> closeAfterFork) {
 }
 
 bool ShowNotification(std::string summary, std::string body, std::vector<int> closeAfterFork) {
-#if defined(__linux__)
+#if defined(__APPLE__)
+  std::stringstream ss;
+  ss << "display notification ";
+  ss << std::quoted(body);
+  ss << " with title ";
+  ss << std::quoted(summary);
+  std::vector<std::string> command = {"osascript", "-e", ss.str()};
+#else
   std::vector<std::string> command = {"notify-send", summary, body};
+  if (IsOnWSL()) {
+    std::stringstream ss;
+    ss << "New-BurntToastNotification -Text ";
+    ss << std::quoted(body);
+    ss << " -Header ";
+    ss << std::quoted(summary);
+    command = {"powershell.exe", ss.str()};
+  }
+#endif
   auto [rfd, wfd, pid] = ExecRedirected(command, false, closeAfterFork);
   close(rfd);
   close(wfd);
   int status = 0;
   while (waitpid(pid, &status, 0) < 0 && errno == EINTR);
   return status == 0;
-#else
-  USING(summary);
-  USING(body);
-  USING(closeAfterFork);
-  return false;
-#endif
 }
 
