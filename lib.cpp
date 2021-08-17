@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include <fstream>
 #include <sstream>
+#include <iomanip>
 
 bool IsFile(std::string file) {
   struct stat st;
@@ -241,11 +242,14 @@ bool ShowNotification(std::string summary, std::string body, std::vector<int> cl
 #else
   std::vector<std::string> command = {"notify-send", summary, body};
   if (IsOnWSL()) {
+    // if this does not work, user should execute
+    // Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
     std::stringstream ss;
-    ss << "New-BurntToastNotification -Text ";
+    ss << "Add-Type -AssemblyName System.Windows.Forms; $global:balmsg = New-Object System.Windows.Forms.NotifyIcon; $path = (Get-Process -id $pid).Path; $balmsg.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon($path); $balmsg.BalloonTipIcon = [System.Windows.Forms.ToolTipIcon]::Warning; $balmsg.BalloonTipText = ";
     ss << std::quoted(body);
-    ss << " -Header ";
+    ss << "; $balmsg.BalloonTipTitle = ";
     ss << std::quoted(summary);
+    ss << "; $balmsg.Visible = $true; $balmsg.ShowBalloonTip(10000)";
     command = {"powershell.exe", ss.str()};
   }
 #endif
