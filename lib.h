@@ -5,6 +5,11 @@
 
 #define ENSURE(x) if (!(x)) { ::abort(); }
 #define USING(x) ((void)(x))
+#if defined(__clang__) || defined(__GNUC__)
+#define FORMAT(x, y, z) __attribute__ ((format (x, y, z)))
+#else
+#define FORMAT(x, y, z)
+#endif
 enum ClippyCommand : uint32_t {
   NONE,
   RETRIEVE_CLIPBOARD,

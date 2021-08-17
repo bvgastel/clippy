@@ -9,14 +9,31 @@
 
 #define LISTEN_BACKLOG 5
 
-// void Server(std::string socket_path) {
-//   std::string socket_path = "/tmp/clipboardlocal." + GetUsername();
-//   std::cerr << "using socket: " << socket_path << std::endl;
-
-//   Server(socket_path);
-//   return 0;
-// }
-
+void Connection(int cfd) {
+  bool good = true;
+  while (good) {
+    uint32_t command = ReadBinary(cfd, ClippyCommand::NONE, good);
+    if (command == ClippyCommand::SET_CLIPBOARD) {
+      std::string s = ReadBinary(cfd, "", good);
+      if (!good)
+        break;
+      // std::cerr << "receiving new clipboard contents: " << s << std::endl;
+      SetClipboard(s, {cfd});
+    } else if (command == ClippyCommand::RETRIEVE_CLIPBOARD) {
+      if (!WriteBinary(cfd, ClippyCommand::CLIPBOARD_CONTENTS))
+        break;
+      std::string clipboard = GetClipboard({cfd});
+      // std::cerr << "sending clipboard to remote: " << clipboard << std::endl;
+      if (!WriteBinary(cfd, clipboard))
+        break;
+    } else if (command == ClippyCommand::PING) {
+      if (!WriteBinary(cfd, ClippyCommand::PONG))
+        break;
+    } else {
+      break;
+    }
+  }
+}
 [[noreturn]] void Server(std::string socket_path) {
   // good thing to close these file descriptors, to not interfere with stdin/stdout of e.g. ssh
   close(STDIN_FILENO);
@@ -61,28 +78,12 @@
     }
     //fprintf(stderr, "accepted connection on %i: %i\n", fd, cfd);
 
-    bool good = true;
-    while (good) {
-      uint32_t command = ReadBinary(cfd, ClippyCommand::NONE, good);
-      if (command == ClippyCommand::SET_CLIPBOARD) {
-        std::string s = ReadBinary(cfd, "", good);
-        if (!good)
-          break;
-        // std::cerr << "receiving new clipboard contents: " << s << std::endl;
-        SetClipboard(s, {fd, cfd});
-      } else if (command == ClippyCommand::RETRIEVE_CLIPBOARD) {
-        if (!WriteBinary(cfd, ClippyCommand::CLIPBOARD_CONTENTS))
-          break;
-        std::string clipboard = GetClipboard({fd, cfd});
-        // std::cerr << "sending clipboard to remote: " << clipboard << std::endl;
-        if (!WriteBinary(cfd, clipboard))
-          break;
-      } else if (command == ClippyCommand::PING) {
-        if (!WriteBinary(cfd, ClippyCommand::PONG))
-          break;
-      } else {
-        break;
-      }
+    pid_t child = fork();
+    if (child == 0) {
+      close(fd);
+      Connection(cfd);
+      close(cfd);
+      exit(0);
     }
     // std::cerr << "closing connection" << std::endl;
     close(cfd);
