@@ -235,9 +235,13 @@ bool ShowNotification(std::string summary, std::string body, std::vector<int> cl
   auto [rfd, wfd, pid] = ExecRedirected(command, false, closeAfterFork);
   close(rfd);
   close(wfd);
-  while (waitpid(pid, NULL, 0) < 0 && errno == EINTR);
-  return true;
+  int status = 0;
+  while (waitpid(pid, &status, 0) < 0 && errno == EINTR);
+  return status == 0;
 #else
+  USING(summary);
+  USING(body);
+  USING(closeAfterFork);
   return false;
 #endif
 }
