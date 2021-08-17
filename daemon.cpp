@@ -22,6 +22,10 @@
   close(STDIN_FILENO);
   close(STDOUT_FILENO);
 
+#ifdef __FreeBSD__
+  setproctitle("local");
+#endif
+
   int fd = socket(AF_UNIX, SOCK_STREAM, 0);
   if (fd < 0) {
     perror("socket error");

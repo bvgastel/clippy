@@ -71,11 +71,18 @@ int main(int argc, char *argv[]) {
   bool get = false;
   bool set = false;
   bool ssh = false;
+  bool daemon = false;
 
   if (argc > 1) {
     get = std::string_view(argv[1]) == "-g";
     set = std::string_view(argv[1]) == "-s";
     ssh = std::string_view(argv[1]) == "--ssh";
+    daemon = std::string_view(argv[1]) == "--daemon";
+  }
+
+  if (daemon) {
+    std::string local_socket_path = "/tmp/clipboardlocal." + GetUsername();
+    Server(local_socket_path);
   }
 
   if (ssh) {
