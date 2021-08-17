@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <pwd.h>
 
 #include <stdexcept>
@@ -222,5 +223,18 @@ bool SetClipboard(std::string clipboard, std::vector<int> closeAfterFork) {
   auto bytes = SafeWrite(wfd, clipboard.c_str(), clipboard.size());
   close(wfd);
   return bytes == clipboard.size();
+}
+
+bool ShowNotification(std::string summary, std::string body, std::vector<int> closeAfterFork) {
+#if defined(__linux__)
+  std::vector<std::string> command = {"notify-send", summary, body};
+  auto [rfd, wfd, pid] = ExecRedirected(command, false, closeAfterFork);
+  close(rfd);
+  close(wfd);
+  while (waitpid(pid, NULL, 0) < 0 && errno == EINTR);
+  return true;
+#else
+  return false;
+#endif
 }
 

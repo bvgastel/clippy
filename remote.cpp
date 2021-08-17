@@ -72,12 +72,19 @@ int main(int argc, char *argv[]) {
   bool set = false;
   bool ssh = false;
   bool daemon = false;
+  bool notification = false;
 
   if (argc > 1) {
     get = std::string_view(argv[1]) == "-g";
     set = std::string_view(argv[1]) == "-s";
+    notification = std::string_view(argv[1]) == "-n";
     ssh = std::string_view(argv[1]) == "--ssh";
     daemon = std::string_view(argv[1]) == "--daemon";
+  }
+
+  if (notification && argc != 4) {
+    fprintf(stderr, "Usage: %s -n [summary] [body]\n", argv[0]);
+    return -1;
   }
 
   if (daemon) {
@@ -138,6 +145,12 @@ int main(int argc, char *argv[]) {
         SetClipboard(retval, {});
       return 0;
     }
+    if (notification) {
+      auto summary = argv[2];
+      auto body = argv[3];
+      ShowNotification(summary, body, {});
+      return 0;
+    }
     return -1;
   }
   //std::cerr << "Remote socket found" << std::endl;
@@ -185,6 +198,16 @@ int main(int argc, char *argv[]) {
     if (error)
       return -1;
     if (!WriteBinary(fd, retval))
+      return -1;
+    return 0;
+  }
+  if (notification) {
+    // set clipboard
+    if (!WriteBinary(fd, ClippyCommand::SHOW_NOTIFICATION))
+      return -1;
+    if (!WriteBinary(fd, argv[2]))
+      return -1;
+    if (!WriteBinary(fd, argv[3]))
       return -1;
     return 0;
   }

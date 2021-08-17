@@ -29,6 +29,13 @@ void Connection(int cfd) {
     } else if (command == ClippyCommand::PING) {
       if (!WriteBinary(cfd, ClippyCommand::PONG))
         break;
+    } else if (command == ClippyCommand::SHOW_NOTIFICATION) {
+      std::string summary = ReadBinary(cfd, "", good);
+      std::string body = ReadBinary(cfd, "", good);
+      if (!good)
+        break;
+      // std::cerr << "receiving new clipboard contents: " << s << std::endl;
+      ShowNotification(summary, body, {cfd});
     } else {
       break;
     }

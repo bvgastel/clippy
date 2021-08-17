@@ -17,6 +17,7 @@ enum ClippyCommand : uint32_t {
   CLIPBOARD_CONTENTS,
   PING,
   PONG,
+  SHOW_NOTIFICATION,
 };
 
 int execvp(const std::vector<std::string>& args);
@@ -35,4 +36,4 @@ std::string GetUsername();
 
 std::string GetClipboard(std::vector<int> closeAfterFork);
 bool SetClipboard(std::string clipboard, std::vector<int> closeAfterFork);
-
+bool ShowNotification(std::string summary, std::string body, std::vector<int> closeAfterFork);
