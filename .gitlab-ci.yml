@@ -66,6 +66,33 @@ debian-bullseye-arm64:
     - cmake --build . --target install
     - find $PACKAGE
 
+debian-bookworm-amd64:
+  extends: .debian-bookworm-amd64
+  variables:
+    PACKAGE: platform/packages-debian-bookworm/clippy
+  script:
+    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
+    - cmake --build . --target install
+    - find $PACKAGE
+
+debian-bookworm-armhf:
+  extends: .debian-bookworm-armhf-on-amd64
+  variables:
+    PACKAGE: platform/packages-debian-bookworm/clippy
+  script:
+    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
+    - cmake --build . --target install
+    - find $PACKAGE
+
+debian-bookworm-arm64:
+  extends: .debian-bookworm-arm64-on-amd64
+  variables:
+    PACKAGE: platform/packages-debian-bookworm/clippy
+  script:
+    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
+    - cmake --build . --target install
+    - find $PACKAGE
+
 ubuntu-focal-amd64:
   extends: .ubuntu-focal-amd64
   variables:
