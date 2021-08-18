@@ -1,10 +1,6 @@
-# clippy: A shared clipboard manager with history for your desktop and servers
-Including history.
-Stored securely on one of your servers.
+# clippy: making clipboard work over SSH
 
-Can be made with `ssh -R /tmp/clipboardremote:/tmp/clipboardlocal host` (tests can be done with `nc -lU /tmp/clipboardserver` and `nc -U /tmp/clipboardclient`).
-
-A problem is that if  the /tmp/clipboardclient already exists (after an old session), the proxy of the port won't work. `-o 'StreamLocalBindUnlink=yes'` is supposed to help, however, at least for `-R` mode, it does not. See https://bugzilla.mindrot.org/show_bug.cgi?id=2601 . It works if `StreamLocalBindUnlink yes` is specified in the server config.
+Clippy is a tool to interact between your desktop environment and remote SSH sessions: share clipboard contents, show notifications on your desktop. This way, your remote vim session, can paste directly from your clipboard, and yanking from a remote session will end up in your clipboard manager. Clippy uses the SSH connection (specifically UNIX domain socket forwarding), so the clipboard contents is encrypted during transmission.
 
 # Installation
 
@@ -15,16 +11,18 @@ brew install --HEAD bitpowder/clippy/clippy
 ```
 Update with `brew reinstall --HEAD bitpowder/clippy/clippy`.
 
-For other platforms add the [bitpowder repository](https://bitpowder.com:2443/bitpowder/repo).
+For FreeBSD, Debian, Ubuntu, and Raspbian, add the [bitpowder repository](https://bitpowder.com:2443/bitpowder/repo). See the instructions on that repository page.
 
 # Usage
 
 Clippy should be installed on both the client and the server. Use `clippy --ssh` instead of `ssh` to connect to remote computers. Clippy set additional options automatically for ssh.
 If no clippy daemon is running, it automatically starts a clippy daemon that listens on a UNIX domain socket named `/tmp/clipboard.username`, which is forwarded through SSH. The daemon can have a config file to configure the local actions .
 
-# Set up for specific progrms
+To show a notification, use `clippy -n [summary] [body]`.
 
-Command line utilities to piggy back files and clipboard commands to the server. Some software needs custom config options. Setup depends on the software you are using:
+# Set up for specific programs
+
+Command line utilities to piggyback files and clipboard commands to the server. Some software needs custom config options. Setup depends on the software you are using:
 
 ## sshd (on some platforms set automatically)
 
@@ -34,8 +32,10 @@ StreamLocalBindUnlink yes
 AcceptEnv LC_CLIPPY
 ```
 
+On modern Debian, Linux, and Raspbian, these settings are automatically included when you install `clippy`.
+
 ## tmux
-Use `tmux-yank` with:
+Use with `tmux-yank`:
 ```
 # move x clipboard into tmux paste buffer
 bind ] run "tmux set-buffer \"clippy -g)\"; tmux paste-buffer"
@@ -69,20 +69,15 @@ let g:clipboard = {
       \ }
 ```
 
-For custom `neovim` clipboard, see `:help g:clipboard`.
+For more custom `neovim` clipboard settings, see `:help g:clipboard`.
 
 # Supported commands
 
 - [x] read clipboard
 - [x] set clipboard
+- [x] show message on desktop (with `notify-send`, on WSL use `powershell.exe`, on macOS use `osascript`)
 - [ ] view file on desktop
 - [ ] open URL in browser on desktop
-- [ ] show message on desktop (with DBus)
 - [ ] copy file to/from desktop
-- [ ] support rendering part of a i3statusbar on desktop: cpu usage, memory usage, custom things, workqueue like nq status (with remote queue)
+- [ ] support rendering part of a i3statusbar on desktop: cpu usage, memory usage, custom things, work queue like nq status (with remote queue)
 - [ ] remote dmenu session
-
-ToDo:
-- [ ] support connecting from different machines to the same server (probably should do something with randomized /tmp/clipboardremote.some-unique-number, and setting a environment variable which clipboard connection to use. See TOKENS in `man ssh_config`)
-- [ ] ability to keep clipboard when changing users (e.g. root user). Relevant: passing environment variables: https://superuser.com/a/480029 . Can be used to indicate a specific socket. (Still have to solve the UNIX socket permissions)
-- [ ] Support Wayland clipboard (without X, e.g. in foot terminal)
