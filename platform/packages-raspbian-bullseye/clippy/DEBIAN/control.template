@@ -1,0 +1,9 @@
+Package: clippy
+Version: VERSION
+Section: custom
+Priority: optional
+Architecture: ARCHITECTURE
+Depends: libstdc++6
+Homepage: https://www.bitpowder.com
+Maintainer: Bernard van Gastel <bvgastel@bitpowder.com>
+Description: Clippy, making shared clipboards work over SSH
