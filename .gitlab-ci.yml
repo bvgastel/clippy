@@ -138,6 +138,15 @@ raspbian-buster-armhf:
     - cmake --build . --target install
     - find $PACKAGE
 
+raspbian-bullseye-armhf:
+  extends: .raspbian-bullseye-armhf
+  variables:
+    PACKAGE: platform/packages-raspbian-bullseye/clippy
+  script:
+    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
+    - cmake --build . --target install
+    - find $PACKAGE
+
 freebsd13-package-amd64:
   stage: package
   needs: []
