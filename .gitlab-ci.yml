@@ -8,6 +8,7 @@ variables:
   GIT_DEPTH: "16"
   GIT_STRATEGY: fetch
   GIT_SUBMODULE_STRATEGY: recursive
+  NAME: "clippy"
 
 debian-buster-amd64:
   extends: .debian-buster-amd64
