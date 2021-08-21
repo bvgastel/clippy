@@ -8,8 +8,6 @@ variables:
   GIT_DEPTH: "16"
   GIT_STRATEGY: fetch
   GIT_SUBMODULE_STRATEGY: recursive
-  BUILD_TYPE: "Release"
-  PACKAGE_BUILD_OPTIONS: "-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=$BUILD_TYPE"
 
 debian-buster-amd64:
   extends: .debian-buster-amd64
@@ -31,84 +29,30 @@ debian-bullseye-arm64:
 
 debian-bookworm-amd64:
   extends: .debian-bookworm-amd64
-  variables:
-    PACKAGE: platform/packages-debian-bookworm/clippy
-  script:
-    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
-    - cmake --build . --target install
-    - find $PACKAGE
 
 debian-bookworm-armhf:
   extends: .debian-bookworm-armhf-on-amd64
-  variables:
-    PACKAGE: platform/packages-debian-bookworm/clippy
-  script:
-    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
-    - cmake --build . --target install
-    - find $PACKAGE
 
 debian-bookworm-arm64:
   extends: .debian-bookworm-arm64-on-amd64
-  variables:
-    PACKAGE: platform/packages-debian-bookworm/clippy
-  script:
-    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
-    - cmake --build . --target install
-    - find $PACKAGE
 
 ubuntu-focal-amd64:
   extends: .ubuntu-focal-amd64
-  variables:
-    PACKAGE: platform/packages-ubuntu-focal/clippy
-  script:
-    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
-    - cmake --build . --target install
-    - find $PACKAGE
 
 ubuntu-focal-arm64:
   extends: .ubuntu-focal-arm64-on-amd64
-  variables:
-    PACKAGE: platform/packages-ubuntu-focal/clippy
-  script:
-    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
-    - cmake --build . --target install
-    - find $PACKAGE
 
 ubuntu-hirsute-amd64:
   extends: .ubuntu-hirsute-amd64
-  variables:
-    PACKAGE: platform/packages-ubuntu-hirsute/clippy
-  script:
-    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
-    - cmake --build . --target install
-    - find $PACKAGE
 
 ubuntu-hirsute-arm64:
   extends: .ubuntu-hirsute-arm64-on-amd64
-  variables:
-    PACKAGE: platform/packages-ubuntu-hirsute/clippy
-  script:
-    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
-    - cmake --build . --target install
-    - find $PACKAGE
 
 raspbian-buster-armhf:
   extends: .raspbian-buster-armhf
-  variables:
-    PACKAGE: platform/packages-raspbian-buster/clippy
-  script:
-    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
-    - cmake --build . --target install
-    - find $PACKAGE
 
 raspbian-bullseye-armhf:
   extends: .raspbian-bullseye-armhf
-  variables:
-    PACKAGE: platform/packages-raspbian-bullseye/clippy
-  script:
-    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
-    - cmake --build . --target install
-    - find $PACKAGE
 
 freebsd13-package-amd64:
   extends: .freebsd13-package-amd64
