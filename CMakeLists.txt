@@ -53,4 +53,4 @@ set(src
 add_executable(${PROJECT_NAME} ${src})
 target_compile_options(${PROJECT_NAME} PRIVATE "-Wno-old-style-cast" "-Wno-unused-macros" "-Wno-unknown-warning-option")
 INSTALL(TARGETS ${PROJECT_NAME} DESTINATION bin)
-INSTALL(TARGETS ${PROJECT_NAME}.conf DESTINATION etc/ssh/sshd_config.d)
+INSTALL(TARGETS ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.conf DESTINATION etc/ssh/sshd_config.d)
