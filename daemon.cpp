@@ -87,6 +87,7 @@ void Connection(int cfd) {
 
     pid_t child = fork();
     if (child == 0) {
+      setsid(); // avoid zombies, no need for waitpid anymore
       close(fd);
       Connection(cfd);
       close(cfd);
