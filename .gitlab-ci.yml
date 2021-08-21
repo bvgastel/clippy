@@ -10,61 +10,24 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   BUILD_TYPE: "Release"
   PACKAGE_BUILD_OPTIONS: "-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=$BUILD_TYPE"
-  BINARIES: "clippy-local clippy-remote"
 
 debian-buster-amd64:
   extends: .debian-buster-amd64
-  variables:
-    PACKAGE: platform/packages-debian-buster/clippy
-  script:
-    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
-    - cmake --build . --target install
-    - find $PACKAGE
 
 debian-buster-armhf:
   extends: .debian-buster-armhf-on-amd64
-  variables:
-    PACKAGE: platform/packages-debian-buster/clippy
-  script:
-    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
-    - cmake --build . --target install
-    - find $PACKAGE
 
 debian-buster-arm64:
   extends: .debian-buster-arm64-on-amd64
-  variables:
-    PACKAGE: platform/packages-debian-buster/clippy
-  script:
-    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
-    - cmake --build . --target install
-    - find $PACKAGE
 
 debian-bullseye-amd64:
   extends: .debian-bullseye-amd64
-  variables:
-    PACKAGE: platform/packages-debian-bullseye/clippy
-  script:
-    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
-    - cmake --build . --target install
-    - find $PACKAGE
 
 debian-bullseye-armhf:
   extends: .debian-bullseye-armhf-on-amd64
-  variables:
-    PACKAGE: platform/packages-debian-bullseye/clippy
-  script:
-    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
-    - cmake --build . --target install
-    - find $PACKAGE
 
 debian-bullseye-arm64:
   extends: .debian-bullseye-arm64-on-amd64
-  variables:
-    PACKAGE: platform/packages-debian-bullseye/clippy
-  script:
-    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=$PACKAGE/usr .
-    - cmake --build . --target install
-    - find $PACKAGE
 
 debian-bookworm-amd64:
   extends: .debian-bookworm-amd64
@@ -148,24 +111,5 @@ raspbian-bullseye-armhf:
     - find $PACKAGE
 
 freebsd13-package-amd64:
-  stage: package
-  needs: []
-  dependencies: []
-  only:
-  - main 
-  - stable 
-  tags: [freebsd-amd64-13]
-  script:
-    - export ABI=`pkg -vv | grep -i '^abi' | cut -d'"' -f2`; echo $ABI
-    - cmake -G Ninja $PACKAGE_BUILD_OPTIONS -DCMAKE_INSTALL_PREFIX=pkg/$ABI/usr/local .
-    - cmake --build .
-    - echo "cmake --build . --target install" | su
-    - echo "cd pkg/$ABI; ../../platform/freebsd/build-pkg.sh ../../platform/freebsd/MANIFEST_TEMPLATE ../MANIFEST-$ABI ../../post-install ../../post-deinstall" | su
-  after_script:
-    - echo "chown -R gitlab-runner pkg" | su
-  artifacts:
-    expire_in: 1 day
-    paths:
-    - "pkg/*/*.pkg"
-    - "pkg/MANIFEST-*"
+  extends: .freebsd13-package-amd64
 
