@@ -4,10 +4,19 @@
 #include <sys/un.h>
 #include <stdlib.h>
 
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <signal.h>
+
 #include "simple-raw.h"
 #include "lib.h"
 
 #define LISTEN_BACKLOG 5
+
+void ProcessExit(int) {
+  int status = 0; 
+  while (pid_t pid = waitpid(-1, &status, WNOHANG));
+}
 
 void Connection(int cfd) {
   bool good = true;
@@ -50,6 +59,8 @@ void Connection(int cfd) {
   setproctitle("local");
 #endif
 
+  signal(SIGCHLD, ProcessExit);
+
   int fd = socket(AF_UNIX, SOCK_STREAM, 0);
   if (fd < 0) {
     perror("socket error");
@@ -87,7 +98,6 @@ void Connection(int cfd) {
 
     pid_t child = fork();
     if (child == 0) {
-      setsid(); // avoid zombies, no need for waitpid anymore
       close(fd);
       Connection(cfd);
       close(cfd);
