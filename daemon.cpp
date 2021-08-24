@@ -15,7 +15,12 @@
 
 void ProcessExit(int) {
   int status = 0; 
-  while (pid_t pid = waitpid(-1, &status, WNOHANG));
+  while (true) {
+    pid_t pid = waitpid(-1, &status, WNOHANG);
+    if (pid == 0) // avoid blocking
+      break;
+    // on success or error, try again
+  }
 }
 
 void Connection(int cfd) {
