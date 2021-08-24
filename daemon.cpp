@@ -19,6 +19,8 @@ void ProcessExit(int) {
     pid_t pid = waitpid(-1, &status, WNOHANG);
     if (pid == 0) // avoid blocking
       break;
+    if (pid < 0 && errno == ECHILD) // no unwaited-for childs
+      break;
     // on success or error, try again
   }
 }
