@@ -1,6 +1,6 @@
 # clippy: making clipboard work over SSH
 
-Clippy is a tool to interact between your desktop environment and remote SSH sessions: share clipboard contents, show notifications on your desktop. This way, your remote vim session, can paste directly from your clipboard, and yanking from a remote session will end up in your clipboard manager. Clippy uses the SSH connection (specifically UNIX domain socket forwarding), so the clipboard contents is encrypted during transmission.
+Clippy is a tool to interact with your desktop environment from a remote SSH sessions: share clipboard contents, and show notifications on your desktop. This way, your remote neovim session can paste directly from your clipboard, and yanking in a remote session will end up in your local clipboard manager (e.g. clipmenud). Clippy uses the SSH connection (specifically UNIX domain socket forwarding), so the clipboard contents is encrypted during transmission.
 
 # Installation
 
@@ -16,7 +16,7 @@ For FreeBSD, Debian, Ubuntu, and Raspbian, add the [bitpowder repository](https:
 # Usage
 
 Clippy should be installed on both the client and the server. Use `clippy --ssh` instead of `ssh` to connect to remote computers. Clippy set additional options automatically for ssh.
-If no clippy daemon is running, it automatically starts a clippy daemon that listens on a UNIX domain socket named `/tmp/clipboard.username`, which is forwarded through SSH. The daemon can have a config file to configure the local actions .
+If no clippy daemon is running, it automatically starts a clippy daemon that listens on a UNIX domain socket named `/tmp/clipboard.username.something`, which is forwarded through SSH.
 
 To show a notification, use `clippy -n [summary] [body]`.
 
@@ -32,7 +32,7 @@ StreamLocalBindUnlink yes
 AcceptEnv LC_CLIPPY
 ```
 
-On modern Debian, Linux, and Raspbian, these settings are automatically included when you install `clippy`.
+On modern Debian, Ubuntu, and Raspbian, these settings are automatically included when you install `clippy`. On FreeBSD (and some Linux distros) add `Include /etc/ssh/sshd_config.d/*`.
 
 ## tmux
 Use with `tmux-yank`:
