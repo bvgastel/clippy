@@ -2,23 +2,34 @@
 
 Clippy is a tool to interact with your desktop environment from a remote SSH sessions: share clipboard contents, and show notifications on your desktop. This way, your remote neovim session can paste directly from your clipboard, and yanking in a remote session will end up in your local clipboard manager (e.g. clipmenud). Clippy uses the SSH connection (specifically UNIX domain socket forwarding), so the clipboard contents is encrypted during transmission.
 
+Integrates with:
+- Linux/FreeBSD (X11/Wayland);
+- Windows if run under WSL;
+- macOS.
+
 # Installation
+For FreeBSD, Debian, Ubuntu, and Raspbian, add the [bitpowder repository](https://bitpowder.com:2443/bitpowder/repo). See the instructions on that repository page.
 
 For macOS:
 ```
-brew tap bitpowder/clippy https://bitpowder.com:2443/bvgastel/clippy.git
-brew install --HEAD bitpowder/clippy/clippy
+brew tap bvgastel/clippy https://github.com/bvgastel/clippy
+brew install --HEAD bvgastel/clippy/clippy
 ```
-Update with `brew reinstall --HEAD bitpowder/clippy/clippy`.
+Update with `brew reinstall --HEAD bvgastel/clippy/clippy`.
 
-For FreeBSD, Debian, Ubuntu, and Raspbian, add the [bitpowder repository](https://bitpowder.com:2443/bitpowder/repo). See the instructions on that repository page.
+
+To build the project from the source, you need cmake and a C++ compiler.
 
 # Usage
 
 Clippy should be installed on both the client and the server. Use `clippy --ssh` instead of `ssh` to connect to remote computers. Clippy set additional options automatically for ssh.
 If no clippy daemon is running, it automatically starts a clippy daemon that listens on a UNIX domain socket named `/tmp/clipboard.username.something`, which is forwarded through SSH.
 
-To show a notification, use `clippy -n [summary] [body]`.
+To **retrieve the clipboard** contents, use `clippy -g`.
+
+To **set the clipboard**, use `echo contents | clippy -s`.
+
+To show a **notification**, use `clippy -n [summary] [body]`.
 
 # Set up for specific programs
 
@@ -38,7 +49,7 @@ On modern Debian, Ubuntu, and Raspbian, these settings are automatically include
 Use with `tmux-yank`:
 ```
 # move x clipboard into tmux paste buffer
-bind ] run "tmux set-buffer \"clippy -g)\"; tmux paste-buffer"
+bind ] run "tmux set-buffer \"$(clippy -g)\"; tmux paste-buffer"
 set -g @override_copy_command 'clippy -s'
 set-option -g -a update-environment "LC_CLIPPY"
 ```
