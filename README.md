@@ -43,7 +43,9 @@ StreamLocalBindUnlink yes
 AcceptEnv LC_CLIPPY
 ```
 
-On modern Debian, Ubuntu, and Raspbian, these settings are automatically included when you install `clippy`. On FreeBSD (and some Linux distros) add `Include /etc/ssh/sshd_config.d/*`.
+On modern Debian, Ubuntu, and Raspbian, these settings are automatically included when you install `clippy`.
+On FreeBSD add `Include /usr/local/etc/ssh/sshd_config.d/*`.
+On Linux add `Include /etc/ssh/sshd_config.d/*`.
 
 ## tmux
 Use with `tmux-yank`:
