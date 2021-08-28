@@ -28,8 +28,8 @@ export DIR_SIZE
     awk '{print "    /" substr($1, 3) ": \"-\","}'
 	echo " }"
 
-	# Add files_directories in
-	echo " files_directories: {"
+	# Add directories in
+	echo " directories: {"
 	find ${files_dir} -type d -mindepth 1 |
     awk '{print "    /" substr($1, 3) ": y,"}'
   echo " }"
