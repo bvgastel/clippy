@@ -29,10 +29,10 @@ export DIR_SIZE
 	echo " }"
 
 	# Add files_directories in
-	# echo " files_directories: {"
-	# find ${files_dir} -type d -mindepth 1 |
-    # awk '{print "    /" substr($1, 3) ": y,"}'
-  # echo " }"
+	echo " files_directories: {"
+	find ${files_dir} -type d -mindepth 1 |
+    awk '{print "    /" substr($1, 3) ": y,"}'
+  echo " }"
 
 } | sed -e "s:${files_dir}::" > ${manifest}
 
