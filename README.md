@@ -46,7 +46,7 @@ AcceptEnv LC_CLIPPY
 On modern Debian, Ubuntu, and Raspbian, these settings are automatically included when you install `clippy`. On FreeBSD (and some Linux distros) add `Include /etc/ssh/sshd_config.d/*`.
 
 ## tmux
-Use with `tmux-yank`:
+Use with `tmux-yank` (in `~/.tmux.conf`):
 ```
 # move x clipboard into tmux paste buffer
 bind ] run "tmux set-buffer \"$(clippy -g)\"; tmux paste-buffer"
@@ -54,7 +54,7 @@ set -g @override_copy_command 'clippy -s'
 set-option -g -a update-environment "LC_CLIPPY"
 ```
 
-The basic version:
+The basic version, without any plugins (in `~/.tmux.conf`):
 ```
 bind ] run "tmux set-buffer \"$(clippy -g)\"; tmux paste-buffer"
 # move tmux copy buffer into x clipboard
@@ -64,8 +64,9 @@ set-option -g -a update-environment "LC_CLIPPY"
 ```
 
 ## neovim
+In `.config/nvim/init.vim`:
 ```
-clipboard+=unnamed,unnamedplus " shared 
+set clipboard+=unnamed,unnamedplus
 let g:clipboard = {
       \   'name': 'ClippyRemoteClipboard',
       \   'copy': {
