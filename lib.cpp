@@ -245,7 +245,8 @@ bool ShowNotification(std::string summary, std::string body, std::vector<int> cl
     // if this does not work, user should execute
     // Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
     std::stringstream ss;
-    ss << "Add-Type -AssemblyName System.Windows.Forms; $global:balmsg = New-Object System.Windows.Forms.NotifyIcon; $path = (Get-Process -id $pid).Path; $balmsg.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon($path); $balmsg.BalloonTipIcon = [System.Windows.Forms.ToolTipIcon]::Warning; $balmsg.BalloonTipText = ";
+    // two times creating a notify icon is needed apparantly, because otherwise the notification is not shown
+    ss << "Add-Type -AssemblyName System.Windows.Forms; $balmsg = New-Object System.Windows.Forms.NotifyIcon; $balmsg = New-Object System.Windows.Forms.NotifyIcon; $path = (Get-Process -id $pid).Path; $balmsg.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon($path); $balmsg.BalloonTipIcon = [System.Windows.Forms.ToolTipIcon]::Warning; $balmsg.BalloonTipText = ";
     ss << std::quoted(body);
     ss << "; $balmsg.BalloonTipTitle = ";
     ss << std::quoted(summary);
