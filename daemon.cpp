@@ -50,8 +50,14 @@ void Connection(int cfd) {
       std::string body = ReadBinary(cfd, "", good);
       if (!good)
         break;
-      // std::cerr << "receiving new clipboard contents: " << s << std::endl;
+      // std::cerr << "show notification: " << summary << " / " << body << std::endl;
       ShowNotification(summary, body, {cfd});
+    } else if (command == ClippyCommand::OPEN_URL) {
+      std::string url = ReadBinary(cfd, "", good);
+      if (!good)
+        break;
+      // std::cerr << "opening url: " << url << std::endl;
+      OpenURL(url, {cfd});
     } else {
       break;
     }
