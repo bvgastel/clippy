@@ -262,3 +262,19 @@ bool ShowNotification(std::string summary, std::string body, std::vector<int> cl
   return status == 0;
 }
 
+bool OpenURL(std::string url, std::vector<int> closeAfterFork) {
+#if defined(__APPLE__)
+  std::vector<std::string> command = {"open", url};
+#else
+  std::vector<std::string> command = {"xdg-open", url};
+  if (IsOnWSL()) {
+    command = {"cmd.exe", "/C", "start", url};
+  }
+#endif
+  auto [rfd, wfd, pid] = ExecRedirected(command, false, closeAfterFork);
+  close(rfd);
+  close(wfd);
+  int status = 0;
+  while (waitpid(pid, &status, 0) < 0 && errno == EINTR);
+  return status == 0;
+}

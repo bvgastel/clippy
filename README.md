@@ -1,6 +1,8 @@
 # clippy: making clipboard work over SSH
 
-Clippy is a tool to interact with your desktop environment from a remote SSH sessions: share clipboard contents, and show notifications on your desktop. This way, your remote neovim session can paste directly from your clipboard, and yanking in a remote session will end up in your local clipboard manager (e.g. clipmenud). Clippy uses the SSH connection (specifically UNIX domain socket forwarding), so the clipboard contents is encrypted during transmission.
+Clippy is a tool to interact with your desktop environment from a remote SSH sessions: share clipboard contents, open URLS and show notifications on your desktop. This way, your remote neovim session can paste directly from your clipboard, and yanking in a remote session will end up in your local clipboard manager (e.g. clipmenud). Clippy uses the SSH connection (specifically UNIX domain socket forwarding), so the clipboard contents is encrypted during transmission.
+
+This is an alternative to [lemonade](https://github.com/lemonade-command/lemonade). However, the security on shared servers is improved as only the current user can share the link to the desktop.
 
 Integrates with:
 - Linux/FreeBSD (X11/Wayland);
@@ -22,14 +24,14 @@ To build the project from the source, you need cmake and a C++ compiler.
 
 # Usage
 
-Clippy should be installed on both the client and the server. Use `clippy --ssh` instead of `ssh` to connect to remote computers. Clippy set additional options automatically for ssh.
+Clippy should be installed on both the client and the server. Use `clippy ssh` instead of `ssh` to connect to remote computers. Clippy set some additional options automatically for ssh.
 If no clippy daemon is running, it automatically starts a clippy daemon that listens on a UNIX domain socket named `/tmp/clipboard.username.something`, which is forwarded through SSH.
 
-To **retrieve the clipboard** contents, use `clippy -g`.
-
-To **set the clipboard**, use `echo contents | clippy -s`.
-
-To show a **notification**, use `clippy -n [summary] [body]`.
+- `clippy ssh` to **set up a clippy ssh connection** to a different host;
+- `clippy get` to **retrieve the clipboard** contents;
+- `echo contents | clippy set` to **set the clipboard**;
+- `clippy notification [summary] [body]` to show a **notification**.
+- `clippy openurl [url]` to **open an URL in your default browser**.
 
 # Set up for specific programs
 
@@ -44,24 +46,24 @@ AcceptEnv LC_CLIPPY
 ```
 
 On modern Debian, Ubuntu, and Raspbian, these settings are automatically included when you install `clippy`.
-On FreeBSD add `Include /usr/local/etc/ssh/sshd_config.d/*`.
-On Linux add `Include /etc/ssh/sshd_config.d/*`.
+On FreeBSD add `Include /usr/local/etc/ssh/sshd_config.d/*` to your `/etc/ssh/sshd_config`.
+On Linux add `Include /etc/ssh/sshd_config.d/*` to your `/etc/ssh/sshd_config`.
 
 ## tmux
 Use with `tmux-yank` (in `~/.tmux.conf`):
 ```
 # move x clipboard into tmux paste buffer
-bind ] run "tmux set-buffer \"$(clippy -g)\"; tmux paste-buffer"
-set -g @override_copy_command 'clippy -s'
+bind ] run "tmux set-buffer \"$(clippy get)\"; tmux paste-buffer"
+set -g @override_copy_command 'clippy set'
 set-option -g -a update-environment "LC_CLIPPY"
 ```
 
 The basic version, without any plugins (in `~/.tmux.conf`):
 ```
-bind ] run "tmux set-buffer \"$(clippy -g)\"; tmux paste-buffer"
+bind ] run "tmux set-buffer \"$(clippy get)\"; tmux paste-buffer"
 # move tmux copy buffer into x clipboard
-bind -t vi-copy y run "tmux save-buffer - | clippy -s"
-bind -t emacs-copy y run "tmux save-buffer - | clippy -s"
+bind -t vi-copy y run "tmux save-buffer - | clippy set"
+bind -t emacs-copy y run "tmux save-buffer - | clippy set"
 set-option -g -a update-environment "LC_CLIPPY"
 ```
 
@@ -72,12 +74,12 @@ set clipboard+=unnamed,unnamedplus
 let g:clipboard = {
       \   'name': 'ClippyRemoteClipboard',
       \   'copy': {
-      \      '+': 'clippy -s',
-      \      '*': 'clippy -s',
+      \      '+': 'clippy set',
+      \      '*': 'clippy set',
       \    },
       \   'paste': {
-      \      '+': 'clippy -g'
-      \      '*': 'clippy -g',
+      \      '+': 'clippy get'
+      \      '*': 'clippy get',
       \   },
       \   'cache_enabled': 0,
       \ }
@@ -90,8 +92,8 @@ For more custom `neovim` clipboard settings, see `:help g:clipboard`.
 - [x] read clipboard
 - [x] set clipboard
 - [x] show message on desktop (with `notify-send`, on WSL use `powershell.exe`, on macOS use `osascript`)
+- [x] open URL in browser on desktop
 - [ ] view file on desktop
-- [ ] open URL in browser on desktop
 - [ ] copy file to/from desktop
-- [ ] support rendering part of a i3statusbar on desktop: cpu usage, memory usage, custom things, work queue like nq status (with remote queue)
+- [ ] support rendering part of a i3statusbar on desktop: CPU usage, memory usage, custom things, work queue like nq status (with remote queue)
 - [ ] remote dmenu session
