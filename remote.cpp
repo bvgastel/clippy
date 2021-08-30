@@ -153,7 +153,7 @@ int main(int argc, char *argv[]) {
     }
     if (notification) {
       auto summary = argv[2];
-      auto body = argv[3];
+      auto body = argc >= 4 ? argv[3] : "";
       ShowNotification(summary, body, {});
       return 0;
     }
