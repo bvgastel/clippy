@@ -1,6 +1,6 @@
 # clippy: making clipboard work over SSH
 
-Clippy is a tool to interact with your desktop environment from a remote SSH sessions: share clipboard contents, open URLS and show notifications on your desktop. This way, your remote neovim session can paste directly from your clipboard, and yanking in a remote session will end up in your local clipboard manager (e.g. clipmenud). Clippy uses the SSH connection (specifically UNIX domain socket forwarding), so the clipboard contents is encrypted during transmission.
+Clippy is a tool to interact with your desktop environment from a remote SSH sessions: share clipboard contents, open URLs and show notifications on your desktop. This way, your remote neovim session can paste directly from your clipboard, and yanking in a remote session will end up in your local clipboard manager (e.g. clipmenud). Clippy uses the SSH connection (specifically UNIX domain socket forwarding), so the clipboard contents is encrypted during transmission.
 
 This is an alternative to [lemonade](https://github.com/lemonade-command/lemonade). However, the security on shared servers is improved as only the current user can share the link to the desktop.
 
@@ -9,7 +9,7 @@ Integrates with:
 - Windows if run under WSL;
 - macOS.
 
-# Installation
+## Installation
 For FreeBSD, Debian, Ubuntu, and Raspbian, add the [bitpowder repository](https://bitpowder.com:2443/bitpowder/repo). See the instructions on that repository page.
 
 For macOS:
@@ -22,7 +22,7 @@ Update with `brew reinstall --HEAD bvgastel/clippy/clippy`.
 
 To build the project from the source, you need cmake and a C++ compiler.
 
-# Usage
+## Usage
 
 Clippy should be installed on both the client and the server. Use `clippy ssh` instead of `ssh` to connect to remote computers. Clippy set some additional options automatically for ssh.
 If no clippy daemon is running, it automatically starts a clippy daemon that listens on a UNIX domain socket named `/tmp/clipboard.username.something`, which is forwarded through SSH.
@@ -33,11 +33,13 @@ If no clippy daemon is running, it automatically starts a clippy daemon that lis
 - `clippy notification [summary] [body]` to show a **notification**.
 - `clippy openurl [url]` to **open an URL in your default browser**.
 
-# Set up for specific programs
+If you execute these commands locally, they also work. Making them suitable for integration in generic config files used both for a server and a client.
 
-Command line utilities to piggyback files and clipboard commands to the server. Some software needs custom config options. Setup depends on the software you are using:
+## Set up for specific programs
 
-## sshd (on some platforms set automatically)
+Command line utilities to piggyback files and clipboard commands to the desktop if available, or run locally when there is no remote session. Some software needs custom config options. Setup depends on the software you are using:
+
+### sshd (on some platforms set automatically)
 
 Your `sshd_config` on the server should have:
 ```
@@ -49,7 +51,7 @@ On modern Debian, Ubuntu, and Raspbian, these settings are automatically include
 On FreeBSD add `Include /usr/local/etc/ssh/sshd_config.d/*` to your `/etc/ssh/sshd_config`.
 On Linux add `Include /etc/ssh/sshd_config.d/*` to your `/etc/ssh/sshd_config`.
 
-## tmux
+### tmux
 Use with `tmux-yank` (in `~/.tmux.conf`):
 ```
 # move x clipboard into tmux paste buffer
@@ -67,7 +69,7 @@ bind -t emacs-copy y run "tmux save-buffer - | clippy set"
 set-option -g -a update-environment "LC_CLIPPY"
 ```
 
-## neovim
+### neovim
 In `.config/nvim/init.vim`:
 ```
 set clipboard+=unnamed,unnamedplus
@@ -87,7 +89,7 @@ let g:clipboard = {
 
 For more custom `neovim` clipboard settings, see `:help g:clipboard`.
 
-# Supported commands
+## Supported commands
 
 - [x] read clipboard
 - [x] set clipboard
