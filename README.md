@@ -32,6 +32,7 @@ If no clippy daemon is running, it automatically starts a clippy daemon that lis
 - `echo contents | clippy set` to **set the clipboard**;
 - `clippy notification [summary] [body]` to show a **notification**.
 - `clippy openurl [url]` to **open an URL in your default browser**.
+- `clippy command [command] [args]` to **execute a command on the desktop**, such as a dmenu session. It forwards stdin, stdout, stderr, and copies over the exit code. Terminal sizes etc are not copied over.
 
 # Set up for specific programs
 
@@ -93,7 +94,7 @@ For more custom `neovim` clipboard settings, see `:help g:clipboard`.
 - [x] set clipboard
 - [x] show message on desktop (with `notify-send`, on WSL use `powershell.exe`, on macOS use `osascript`)
 - [x] open URL in browser on desktop
+- [x] remote command, such as a remote dmenu session
 - [ ] view file on desktop
 - [ ] copy file to/from desktop
 - [ ] support rendering part of a i3statusbar on desktop: CPU usage, memory usage, custom things, work queue like nq status (with remote queue)
-- [ ] remote dmenu session

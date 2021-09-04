@@ -11,6 +11,14 @@
 #include <sys/wait.h>
 #include <pwd.h>
 
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+
+#include "simple-raw.h"
+
+#include <chrono>
+
 #include <stdexcept>
 #include <fstream>
 #include <sstream>
@@ -85,24 +93,27 @@ int execvp(const std::vector<std::string>& args) {
 
 bool CheckFD(int fd) {
   int rc = fcntl(fd, F_GETFD);
-  return rc >= 0;
+  return rc >= 0 || errno != EBADF;
 }
 
-std::tuple<int, int, pid_t> ExecRedirected(const std::vector<std::string>& command, bool redirectError, const std::vector<int>& closeAfterFork) {
+std::tuple<int, int, int, pid_t> ExecRedirected(const std::vector<std::string>& command, const std::vector<int>& closeAfterFork) {
   //std::cout << "executing " << command[0] << std::endl;
   int pipeForInput[2]; // the input of the child process is going here, so the parent can write to it
   ENSURE(pipe(pipeForInput) == 0);
   int pipeForOutput[2]; // the output of the child process is directed to this, so the parent can read from it
   ENSURE(pipe(pipeForOutput) == 0);
+  int pipeForError[2]; // the stderr of the child process is directed to this, so the parent can read from it
+  ENSURE(pipe(pipeForError) == 0);
 
   pid_t child = fork();
   if (child == 0) {
     // child
     close(pipeForInput[1]); // close write end
     close(pipeForOutput[0]); // close read end
+    close(pipeForError[0]); // close read end
 
-    if (redirectError)
-      dup2(pipeForOutput[1], STDERR_FILENO);
+    dup2(pipeForError[1], STDERR_FILENO);
+    close(pipeForError[1]); // close write end
     dup2(pipeForOutput[1], STDOUT_FILENO);
     close(pipeForOutput[1]); // close write end
 
@@ -120,7 +131,7 @@ std::tuple<int, int, pid_t> ExecRedirected(const std::vector<std::string>& comma
     for (int fd : closeAfterFork) {
       // especially useful check if early on in the program stdin/stdout are closed, and
       // there are file descriptors opened (which are assigned fd 0 and 1).
-      if (fd > STDOUT_FILENO + (redirectError?1:0))
+      if (fd > STDERR_FILENO)
         close(fd);
     }
 #endif
@@ -131,7 +142,8 @@ std::tuple<int, int, pid_t> ExecRedirected(const std::vector<std::string>& comma
   }
   close(pipeForInput[0]); // close read end
   close(pipeForOutput[1]); // close write end
-  return std::make_tuple(pipeForOutput[0], pipeForInput[1], child);
+  close(pipeForError[1]); // close stderr end
+  return std::make_tuple(pipeForInput[1], pipeForOutput[0], pipeForError[0], child);
 }
 
 std::string GetUsername() {
@@ -151,8 +163,9 @@ bool IsOnWSL() {
 
 std::optional<std::string> GetTMUXVariable(std::string variable, std::vector<int> closeAfterFork) {
   std::vector<std::string> getClipboardCommand = {"tmux", "show-environment", variable};
-  auto [rfd, wfd, pid] = ExecRedirected(getClipboardCommand, false, closeAfterFork);
+  auto [wfd, rfd, efd, pid] = ExecRedirected(getClipboardCommand, closeAfterFork);
   close(wfd);
+  close(efd);
   bool eof = false;
   bool error = false;
   std::string retval = Read(rfd, eof, error, 1024*1024);
@@ -199,8 +212,9 @@ std::string GetClipboard(std::vector<int> closeAfterFork) {
     getClipboardCommand = {"powershell.exe", "Get-Clipboard"};
   }
 #endif
-  auto [rfd, wfd, pid] = ExecRedirected(getClipboardCommand, false, closeAfterFork);
+  auto [wfd, rfd, efd, pid] = ExecRedirected(getClipboardCommand, closeAfterFork);
   close(wfd);
+  close(efd);
   bool eof = false;
   bool error = false;
   std::string retval = Read(rfd, eof, error, 1024*1024);
@@ -224,8 +238,9 @@ bool SetClipboard(std::string clipboard, std::vector<int> closeAfterFork) {
     setClipboardCommand = {"clip.exe"};
   }
 #endif
-  auto [rfd, wfd, pid] = ExecRedirected(setClipboardCommand, false, closeAfterFork);
+  auto [wfd, rfd, efd, pid] = ExecRedirected(setClipboardCommand, closeAfterFork);
   close(rfd);
+  close(efd);
   auto bytes = SafeWrite(wfd, clipboard.c_str(), clipboard.size());
   close(wfd);
   return bytes == clipboard.size();
@@ -256,9 +271,10 @@ bool ShowNotification(std::string summary, std::string body, std::vector<int> cl
     command = {"powershell.exe", ss.str()};
   }
 #endif
-  auto [rfd, wfd, pid] = ExecRedirected(command, false, closeAfterFork);
-  close(rfd);
+  auto [wfd, rfd, efd, pid] = ExecRedirected(command, closeAfterFork);
   close(wfd);
+  close(rfd);
+  close(efd);
   int status = 0;
   while (waitpid(pid, &status, 0) < 0 && errno == EINTR);
   return status == 0;
@@ -273,10 +289,122 @@ bool OpenURL(std::string url, std::vector<int> closeAfterFork) {
     command = {"cmd.exe", "/C", "start", url};
   }
 #endif
-  auto [rfd, wfd, pid] = ExecRedirected(command, false, closeAfterFork);
-  close(rfd);
+  auto [wfd, rfd, efd, pid] = ExecRedirected(command, closeAfterFork);
   close(wfd);
+  close(rfd);
+  close(efd);
   int status = 0;
   while (waitpid(pid, &status, 0) < 0 && errno == EINTR);
   return status == 0;
+}
+
+void Closed(int signal) {
+  std::cerr << "got SIGPIPE signal: " << signal << std::endl;
+  //exit(-1);
+}
+// fds = <in, out>
+std::map<int,std::string> Proxy(std::vector<ProxyState*> fds, std::function<bool(size_t)> good2) {
+  signal(SIGPIPE, Closed);
+
+  using namespace std::chrono_literals;
+  std::chrono::milliseconds timeout = 100ms; // sample rate for exit of process
+  // set non-blocking
+  for (auto& state : fds) {
+    int s = fcntl(state->in, F_GETFL, 0);
+    ENSURE(fcntl(state->in, F_SETFL, s | O_NONBLOCK) == 0);
+    s = fcntl(state->out, F_GETFL, 0);
+    ENSURE(fcntl(state->out, F_SETFL, s | O_NONBLOCK) == 0);
+  }
+  // multiplex
+  fd_set fdsetRead;
+  fd_set fdsetWrite;
+  std::map<int,std::string> buffers;
+  while (fds.size() > 0 && good2(fds.size())) {
+    int max = 0;
+    FD_ZERO(&fdsetRead);
+    FD_ZERO(&fdsetWrite);
+    for (auto& state : fds) {
+      auto& converted = buffers[state->out];
+      if (converted.empty()) {
+        OLD_STYLE_CAST(SIGN_CONVERSION(FD_SET(state->in, &fdsetRead)));
+        max = std::max(max, state->in);
+      } else {
+        OLD_STYLE_CAST(SIGN_CONVERSION(FD_SET(state->out, &fdsetWrite)));
+        max = std::max(max, state->out);
+      }
+    }
+    std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+    std::chrono::milliseconds remaining = std::chrono::duration_cast<std::chrono::milliseconds>(start - std::chrono::steady_clock::now()) + timeout;
+    struct timeval to = {long(remaining.count()) / 1000, int(remaining.count()) % 1000};
+    int nr = select(max + 1, &fdsetRead, &fdsetWrite, nullptr, &to);
+    if (nr == 0) {
+      // time limit reached
+      continue;
+    }
+    for (auto it = fds.begin(); it != fds.end(); ) {
+      auto& state = *it;
+      auto& converted = buffers[state->out];
+      if (converted.empty()) {
+        if (OLD_STYLE_CAST(SIGN_CONVERSION(FD_ISSET(state->in, &fdsetRead)))) {
+          char b[16384];
+          auto [bytes, err] = SafeRead(state->in, b, sizeof(b));
+          //std::cerr << "fd=" << state->in << " bytes=" << bytes << " and err=" << err << " (good=" << state->good << "; fds=" << fds.size() << ")" << std::endl;
+          if (bytes == 0 && err != EAGAIN) {
+            // EOF
+            //std::cerr << "EOF in fd=" << state->in << std::endl;
+            std::tie(converted,std::ignore) = state->convertInToOut(std::string());
+            state->good = false;
+          } else {
+            state->inBuffer += std::string(b, bytes);
+          }
+        }
+      } else {
+        if (OLD_STYLE_CAST(SIGN_CONVERSION(FD_ISSET(state->out, &fdsetWrite)))) {
+        }
+      }
+
+      while (state->inBuffer.size() > 0) {
+        auto expectedLength = state->expectedLengthForConvert(state->inBuffer);
+        //std::cerr << "got " << state->inBuffer.size() << " but expected " << expectedLength << std::endl;
+        if (state->inBuffer.size() == 0 || state->inBuffer.size() < expectedLength)
+          break;
+        auto [c,ok] = state->convertInToOut(state->inBuffer.substr(0, expectedLength));
+        converted += c;
+        state->good = state->good && ok;
+        state->inBuffer = state->inBuffer.substr(expectedLength);
+        //std::cerr << "current state: good=" << state->good << " converted=" << state->converted.size() << std::endl;
+      }
+
+      if (converted.size() > 0) {
+        auto bytes = SafeWrite(state->out, converted.data(), converted.size());
+        if (bytes == 0 && (errno != EAGAIN && errno != EWOULDBLOCK)) {
+          // EOF
+          //std::cerr << "EOF out fd=" << state->out << std::endl;
+          //perror("EOF out");
+          state->good = false;
+        } else {
+          if (bytes > 0)
+            converted = converted.substr(bytes);
+        }
+      }
+
+      if (converted.empty() && !state->good) {
+        state->close();
+        it = fds.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  }
+  return buffers;
+}
+
+uint32_t ProtocolMessageLength(const std::string& buffer) {
+  uint32_t n = 0;
+  if (buffer.size() < sizeof(n)) {
+    return std::numeric_limits<uint32_t>::max();
+  }
+  memcpy(&n, buffer.data(), sizeof(n));
+  n = ntoh(n);
+  return n + sizeof(n);
 }

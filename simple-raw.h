@@ -11,6 +11,7 @@
 // if retval != size then errno is set
 [[nodiscard]] size_t SafeWrite(int fd, const char* ptr, size_t size);
 
+uint8_t ReadBinary(int in, uint8_t defaultValue, bool& good);
 uint32_t ReadBinary(int in, uint32_t defaultValue, bool& good);
 uint64_t ReadBinary(int in, uint64_t defaultValue, bool& good);
 std::string ReadBinary(int in, const std::string& defaultValue, bool& good);
@@ -19,7 +20,7 @@ std::vector<T> ReadBinary(int in, const std::vector<T>& defaultValue, bool& good
   uint32_t size = ReadBinary(in, uint32_t(0), good);
   std::vector<T> retval;
   for (size_t i = 0; good && i < size; ++i) {
-    retval.push_back(ReadBinary(in, T()));
+    retval.push_back(ReadBinary(in, T(), good));
   }
   return good ? retval : defaultValue;
 }
@@ -35,6 +36,7 @@ std::map<K,V> ReadBinary(int in, const std::map<K, V>& defaultValue, bool& good)
   return good ? retval : defaultValue;
 }
 
+[[nodiscard]] bool WriteBinary(int out, uint8_t number);
 [[nodiscard]] bool WriteBinary(int out, uint32_t number);
 [[nodiscard]] bool WriteBinary(int out, uint64_t number);
 [[nodiscard]] bool WriteBinary(int out, const char* data, uint32_t size);
@@ -66,3 +68,8 @@ template <typename K, typename V>
   }
   return true;
 }
+
+uint8_t ntoh(uint8_t n);
+uint16_t ntoh(uint16_t n);
+uint32_t ntoh(uint32_t n);
+uint64_t ntoh(uint64_t n);
