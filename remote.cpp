@@ -55,14 +55,14 @@ bool Active(std::string local_socket_path) {
   }
 
   // FIXME: add time-out?
-  if (!WriteBinary(fd, ClippyCommand::PING)) {
+  if (!WriteBinary(fd, uint8_t(ClippyCommand::PING))) {
     close(fd);
     return false;
   }
 
   bool good = true;
   // FIXME: add time-out?
-  uint32_t command = ReadBinary(fd, ClippyCommand::NONE, good);
+  uint32_t command = ReadBinary(fd, uint8_t(ClippyCommand::NONE), good);
   bool retval = command == ClippyCommand::PONG;
   close(fd);
   return retval;
@@ -187,7 +187,7 @@ int main(int argc, char *argv[]) {
 
   // get clipboard
   if (get) {
-    if (!WriteBinary(fd, ClippyCommand::RETRIEVE_CLIPBOARD))
+    if (!WriteBinary(fd, uint8_t(ClippyCommand::RETRIEVE_CLIPBOARD)))
       return -1;
     bool good = true;
     uint32_t c = ReadBinary(fd, ClippyCommand::NONE, good);
@@ -204,7 +204,7 @@ int main(int argc, char *argv[]) {
   }
   if (set) {
     // set clipboard
-    if (!WriteBinary(fd, ClippyCommand::SET_CLIPBOARD))
+    if (!WriteBinary(fd, uint8_t(ClippyCommand::SET_CLIPBOARD)))
       return -1;
     bool eof = false;
     bool error = false;
@@ -217,7 +217,7 @@ int main(int argc, char *argv[]) {
     return 0;
   }
   if (notification) {
-    if (!WriteBinary(fd, ClippyCommand::SHOW_NOTIFICATION))
+    if (!WriteBinary(fd, uint8_t(ClippyCommand::SHOW_NOTIFICATION)))
       return -1;
     if (!WriteBinary(fd, argv[2]))
       return -1;
@@ -227,7 +227,7 @@ int main(int argc, char *argv[]) {
     return 0;
   }
   if (openurl) {
-    if (!WriteBinary(fd, ClippyCommand::OPEN_URL))
+    if (!WriteBinary(fd, uint8_t(ClippyCommand::OPEN_URL)))
       return -1;
     if (!WriteBinary(fd, argv[2]))
       return -1;
@@ -236,7 +236,7 @@ int main(int argc, char *argv[]) {
   }
   if (command) {
     //std::cerr << "command" << std::endl;
-    if (!WriteBinary(fd, ClippyCommand::LOCAL_CMD))
+    if (!WriteBinary(fd, uint8_t(ClippyCommand::LOCAL_CMD)))
       return -1;
     std::vector<std::string> c;
     for (int i = 2; i < argc; ++i)

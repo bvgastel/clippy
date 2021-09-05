@@ -33,7 +33,7 @@ void Connection(int cfd) {
 
   bool good = true;
   while (good) {
-    uint32_t command = ReadBinary(cfd, ClippyCommand::NONE, good);
+    uint32_t command = ReadBinary(cfd, uint8_t(ClippyCommand::NONE), good);
     if (command == ClippyCommand::SET_CLIPBOARD) {
       std::string s = ReadBinary(cfd, "", good);
       if (!good)
@@ -41,14 +41,14 @@ void Connection(int cfd) {
       // std::cerr << "receiving new clipboard contents: " << s << std::endl;
       SetClipboard(s, {cfd});
     } else if (command == ClippyCommand::RETRIEVE_CLIPBOARD) {
-      if (!WriteBinary(cfd, ClippyCommand::CLIPBOARD_CONTENTS))
+      if (!WriteBinary(cfd, uint8_t(ClippyCommand::CLIPBOARD_CONTENTS)))
         break;
       std::string clipboard = GetClipboard({cfd});
       // std::cerr << "sending clipboard to remote: " << clipboard << std::endl;
       if (!WriteBinary(cfd, clipboard))
         break;
     } else if (command == ClippyCommand::PING) {
-      if (!WriteBinary(cfd, ClippyCommand::PONG))
+      if (!WriteBinary(cfd, uint8_t(ClippyCommand::PONG)))
         break;
     } else if (command == ClippyCommand::SHOW_NOTIFICATION) {
       std::string summary = ReadBinary(cfd, "", good);
@@ -134,7 +134,7 @@ void Connection(int cfd) {
       }
       if (!WriteBinary(cfd, uint32_t(2)))
         break;
-      if (!WriteBinary(cfd, ClippyCommand::LOCAL_CMD_STATUS))
+      if (!WriteBinary(cfd, uint8_t(ClippyCommand::LOCAL_CMD_STATUS)))
         break;
       if (!WriteBinary(cfd, uint8_t(WEXITSTATUS(status))))
         break;
