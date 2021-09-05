@@ -190,7 +190,7 @@ int main(int argc, char *argv[]) {
     if (!WriteBinary(fd, uint8_t(ClippyCommand::RETRIEVE_CLIPBOARD)))
       return -1;
     bool good = true;
-    uint32_t c = ReadBinary(fd, ClippyCommand::NONE, good);
+    uint32_t c = ReadBinary(fd, uint8_t(ClippyCommand::NONE), good);
     if (c == ClippyCommand::CLIPBOARD_CONTENTS) {
       std::string clipboard = ReadBinary(fd, std::string(), good);
       if (!good)
