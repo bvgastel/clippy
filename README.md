@@ -9,7 +9,7 @@ Integrates with:
 - Windows if run under WSL;
 - macOS.
 
-# Installation
+## Installation
 For FreeBSD, Debian, Ubuntu, and Raspbian, add the [bitpowder repository](https://bitpowder.com:2443/bitpowder/repo). See the instructions on that repository page.
 
 For macOS:
@@ -22,7 +22,7 @@ Update with `brew reinstall --HEAD bvgastel/clippy/clippy`.
 
 To build the project from the source, you need cmake and a C++ compiler.
 
-# Usage
+## Usage
 
 Clippy should be installed on both the client and the server. Use `clippy ssh` instead of `ssh` to connect to remote computers. Clippy set some additional options automatically for ssh.
 If no clippy daemon is running, it automatically starts a clippy daemon that listens on a UNIX domain socket named `/tmp/clipboard.username.something`, which is forwarded through SSH.
@@ -34,11 +34,11 @@ If no clippy daemon is running, it automatically starts a clippy daemon that lis
 - `clippy openurl [url]` to **open an URL in your default browser**.
 - `clippy command [command] [args]` to **execute a command on the desktop**, such as a dmenu session. It forwards stdin, stdout, stderr, and copies over the exit code. Terminal sizes etc are not copied over.
 
-# Set up for specific programs
+## Set up for specific programs
 
 Command line utilities to piggyback files and clipboard commands to the server. Some software needs custom config options. Setup depends on the software you are using:
 
-## sshd (on some platforms set automatically)
+### sshd (on some platforms set automatically)
 
 Your `sshd_config` on the server should have:
 ```
@@ -50,7 +50,7 @@ On modern Debian, Ubuntu, and Raspbian, these settings are automatically include
 On FreeBSD add `Include /usr/local/etc/ssh/sshd_config.d/*` to your `/etc/ssh/sshd_config`.
 On Linux add `Include /etc/ssh/sshd_config.d/*` to your `/etc/ssh/sshd_config`.
 
-## tmux
+### tmux
 Use with `tmux-yank` (in `~/.tmux.conf`):
 ```
 # move x clipboard into tmux paste buffer
@@ -68,7 +68,7 @@ bind -t emacs-copy y run "tmux save-buffer - | clippy set"
 set-option -g -a update-environment "LC_CLIPPY"
 ```
 
-## neovim
+### neovim
 In `.config/nvim/init.vim`:
 ```
 set clipboard+=unnamed,unnamedplus
@@ -88,7 +88,7 @@ let g:clipboard = {
 
 For more custom `neovim` clipboard settings, see `:help g:clipboard`.
 
-# Supported commands
+## Supported commands
 
 - [x] read clipboard
 - [x] set clipboard
@@ -98,3 +98,7 @@ For more custom `neovim` clipboard settings, see `:help g:clipboard`.
 - [ ] view file on desktop
 - [ ] copy file to/from desktop
 - [ ] support rendering part of a i3statusbar on desktop: CPU usage, memory usage, custom things, work queue like nq status (with remote queue)
+
+## Alternatives
+
+- http://sshmenu.sourceforge.net/articles/bcvi/

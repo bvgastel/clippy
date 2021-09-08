@@ -33,6 +33,7 @@ int execvp(const std::vector<std::string>& args);
 std::string Read(int fd, bool& eof, bool& error, size_t max);
 // first int is fd that is the stdin of the process, second is a fd that is the stdout of the process, third is stderr of process, fourth a process id
 std::tuple<int, int, int, pid_t> ExecRedirected(const std::vector<std::string>& command, const std::vector<int>& closeAfterFork);
+pid_t ExecWithInOut(const std::vector<std::string>& command, int fd, const std::vector<int>& closeAfterFork);
 
 bool IsFile(std::string file);
 bool IsSocket(std::string file);

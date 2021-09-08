@@ -147,6 +147,36 @@ std::tuple<int, int, int, pid_t> ExecRedirected(const std::vector<std::string>& 
   return std::make_tuple(pipeForInput[1], pipeForOutput[0], pipeForError[0], child);
 }
 
+pid_t ExecWithInOut(const std::vector<std::string>& command, int fd, const std::vector<int>& closeAfterFork) {
+  pid_t child = fork();
+  if (child == 0) {
+    if (fd != STDIN_FILENO)
+      dup2(fd, STDIN_FILENO);
+    if (fd != STDOUT_FILENO)
+      dup2(fd, STDOUT_FILENO);
+
+    if (fd != STDOUT_FILENO && fd != STDIN_FILENO)
+      close(fd);
+
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+    closefrom(STDERR_FILENO + 1);
+    USING(closeAfterFork);
+#else
+    for (int f : closeAfterFork) {
+      // especially useful check if early on in the program stdin/stdout are closed, and
+      // there are file descriptors opened (which are assigned fd 0 and 1).
+      if (f > STDOUT_FILENO)
+        close(f);
+    }
+#endif
+    //std::cerr << command[0] << ": " << CheckFD(STDIN_FILENO) << " / " << CheckFD(STDOUT_FILENO) << " / " << CheckFD(STDERR_FILENO) << std::endl;;
+
+    execvp(command);
+    exit(-1);
+  }
+  return child;
+}
+
 std::string GetUsername() {
   struct passwd _pw;
   struct passwd *pw;
