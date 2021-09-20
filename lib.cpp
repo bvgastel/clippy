@@ -231,14 +231,24 @@ bool IsLocalSession(std::vector<int> closeAfterFork) {
   return false;
 }
 
+// from https://stackoverflow.com/questions/2896600/how-to-replace-all-occurrences-of-a-character-in-string
+std::string ReplaceAll(std::string str, const std::string& from, const std::string& to) {
+	size_t start_pos = 0;
+	while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+		str.replace(start_pos, from.length(), to);
+		start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+	}
+	return str;
+}
 
 std::string GetClipboard(std::vector<int> closeAfterFork) {
+  bool wsl [[maybe_unused]] = false;
 #if defined(__APPLE__)
   std::vector<std::string> getClipboardCommand = {"pbpaste"};
   bool wsl = false;
 #else
   std::vector<std::string> getClipboardCommand = {"xsel", "--clipboard", "--output"};
-  bool wsl = IsOnWSL();
+  wsl = IsOnWSL();
   if (wsl) {
     getClipboardCommand = {"powershell.exe", "Get-Clipboard"};
   }
@@ -254,6 +264,9 @@ std::string GetClipboard(std::vector<int> closeAfterFork) {
   if (wsl) {
     // `powershell.exe Get-Clipboard` appends \r\n to output, get rid of it
     retval = retval.size() >= 2 ? retval.substr(0, retval.size()-2) : std::string();
+  }
+  if (wsl) {
+    retval = ReplaceAll(retval, "\r\n", "\n");
   }
   // better to return nothing than half an clipboard
   // this way the user knows something went wrong
