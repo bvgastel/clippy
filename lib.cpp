@@ -245,7 +245,6 @@ std::string GetClipboard(std::vector<int> closeAfterFork) {
   bool wsl [[maybe_unused]] = false;
 #if defined(__APPLE__)
   std::vector<std::string> getClipboardCommand = {"pbpaste"};
-  bool wsl = false;
 #else
   std::vector<std::string> getClipboardCommand = {"xsel", "--clipboard", "--output"};
   wsl = IsOnWSL();
