@@ -17,7 +17,7 @@ For macOS:
 brew tap bvgastel/clippy https://github.com/bvgastel/clippy
 brew install --HEAD bvgastel/clippy/clippy
 ```
-Update with `brew reinstall --HEAD bvgastel/clippy/clippy`.
+Update with `brew reinstall bvgastel/clippy/clippy`.
 
 
 To build the project from the source, you need cmake and a C++ compiler.
@@ -63,8 +63,8 @@ The basic version, without any plugins (in `~/.tmux.conf`):
 ```
 bind ] run "tmux set-buffer \"$(clippy get)\"; tmux paste-buffer"
 # move tmux copy buffer into x clipboard
-bind -t vi-copy y run "tmux save-buffer - | clippy set"
-bind -t emacs-copy y run "tmux save-buffer - | clippy set"
+bind -T copy-mode-vi y run "tmux save-buffer - | clippy set"
+bind -T copy-mode-emacs y run "tmux save-buffer - | clippy set"
 set-option -g -a update-environment "LC_CLIPPY"
 ```
 
