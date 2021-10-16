@@ -256,7 +256,7 @@ int main(int argc, char *argv[]) {
       //std::cerr << "got message of " << in.size() << std::endl;
       if (in.size() < 5 || in[4] == ClippyCommand::LOCAL_CMD_STDOUT_CLOSE) {
         //std::cerr << "closing stdout from remote connection" << std::endl;
-        return {{}, true};
+        return {std::string(), true};
       }
       if (in[4] == ClippyCommand::LOCAL_CMD_STDOUT) {
         //std::cerr << "got stdout of " << in.size()-5 << std::endl;
@@ -269,9 +269,9 @@ int main(int argc, char *argv[]) {
         status = uint8_t(in[5]);
         //std::cerr << "got status of remote command: " << status << std::endl;
         running = false;
-        return {{}, false};
+        return {std::string(), false};
       }
-      return {{}, true};
+      return {std::string(), true};
     }, [&running]{ if (running) { exit(-1); }}}; // lost connection too early, so error exit
     auto remaining = Proxy({&commandIn, &commandOut}, [&running](size_t count) {
       //std::cerr << "wait loop for " << count << " fds" << std::endl;

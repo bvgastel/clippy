@@ -97,9 +97,9 @@ void Connection(int cfd) {
           return {in.substr(5), true};
         }
         if (in[4] == ClippyCommand::LOCAL_CMD_STDIN_CLOSE) {
-          return {{}, false};
+          return {std::string(), false};
         }
-        return {{}, true};
+        return {std::string(), true};
       };
       ProxyClose commandInClose = [&wfd] {
           close(wfd);
