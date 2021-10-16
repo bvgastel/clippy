@@ -17,7 +17,7 @@ For macOS:
 brew tap bvgastel/clippy https://github.com/bvgastel/clippy
 brew install --HEAD bvgastel/clippy/clippy
 ```
-Update with `brew reinstall --HEAD bvgastel/clippy/clippy`.
+Update with `brew reinstall bvgastel/clippy/clippy`.
 
 
 To build the project from the source, you need cmake and a C++ compiler.
@@ -27,17 +27,19 @@ To build the project from the source, you need cmake and a C++ compiler.
 Clippy should be installed on both the client and the server. Use `clippy ssh` instead of `ssh` to connect to remote computers. Clippy set some additional options automatically for ssh.
 If no clippy daemon is running, it automatically starts a clippy daemon that listens on a UNIX domain socket named `/tmp/clipboard.username.something`, which is forwarded through SSH.
 
+Commands:
 - `clippy ssh` to **set up a clippy ssh connection** to a different host;
 - `clippy get` to **retrieve the clipboard** contents;
 - `echo contents | clippy set` to **set the clipboard**;
 - `clippy notification [summary] [body]` to show a **notification**.
 - `clippy openurl [url]` to **open an URL in your default browser**.
+- `clippy command [command] [args]` to **execute a command on the desktop**, such as a dmenu session. It forwards stdin, stdout, stderr, and copies over the exit code. Terminal sizes etc are not copied over.
 
 If you execute these commands locally, they also work. Making them suitable for integration in generic config files used both for a server and a client.
 
 ## Set up for specific programs
 
-Command line utilities to piggyback files and clipboard commands to the desktop if available, or run locally when there is no remote session. Some software needs custom config options. Setup depends on the software you are using:
+Some software needs custom config options. Setup depends on the software you are using:
 
 ### sshd (on some platforms set automatically)
 
@@ -64,8 +66,8 @@ The basic version, without any plugins (in `~/.tmux.conf`):
 ```
 bind ] run "tmux set-buffer \"$(clippy get)\"; tmux paste-buffer"
 # move tmux copy buffer into x clipboard
-bind -t vi-copy y run "tmux save-buffer - | clippy set"
-bind -t emacs-copy y run "tmux save-buffer - | clippy set"
+bind -T copy-mode-vi y run "tmux save-buffer - | clippy set"
+bind -T copy-mode-emacs y run "tmux save-buffer - | clippy set"
 set-option -g -a update-environment "LC_CLIPPY"
 ```
 
@@ -95,7 +97,11 @@ For more custom `neovim` clipboard settings, see `:help g:clipboard`.
 - [x] set clipboard
 - [x] show message on desktop (with `notify-send`, on WSL use `powershell.exe`, on macOS use `osascript`)
 - [x] open URL in browser on desktop
+- [x] remote command, such as a remote dmenu session
 - [ ] view file on desktop
 - [ ] copy file to/from desktop
 - [ ] support rendering part of a i3statusbar on desktop: CPU usage, memory usage, custom things, work queue like nq status (with remote queue)
-- [ ] remote dmenu session
+
+## Alternatives
+
+- http://sshmenu.sourceforge.net/articles/bcvi/

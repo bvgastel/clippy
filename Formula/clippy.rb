@@ -10,7 +10,7 @@ class Clippy < Formula
   depends_on "cmake" => :build
 
   def install
-    system "cmake", "-S", ".", "-B", "build", *std_cmake_args
+    system "cmake", "-DALL_WARNINGS=OFF", "-S", ".", "-B", "build", *std_cmake_args
     system "cmake", "--build", "build", "--target", "install"
   end
 

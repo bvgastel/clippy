@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <assert.h>
+#include <fcntl.h>
 
 #include "simple-raw.h"
 #include "lib.h"
@@ -54,14 +55,14 @@ bool Active(std::string local_socket_path) {
   }
 
   // FIXME: add time-out?
-  if (!WriteBinary(fd, ClippyCommand::PING)) {
+  if (!WriteBinary(fd, uint8_t(ClippyCommand::PING))) {
     close(fd);
     return false;
   }
 
   bool good = true;
   // FIXME: add time-out?
-  uint32_t command = ReadBinary(fd, ClippyCommand::NONE, good);
+  uint32_t command = ReadBinary(fd, uint8_t(ClippyCommand::NONE), good);
   bool retval = command == ClippyCommand::PONG;
   close(fd);
   return retval;
@@ -74,6 +75,7 @@ int main(int argc, char *argv[]) {
   bool daemon = false;
   bool notification = false;
   bool openurl = false;
+  bool command = false;
 
   if (argc > 1) {
     get = std::string_view(argv[1]) == "-g" || std::string_view(argv[1]) == "get";
@@ -82,6 +84,7 @@ int main(int argc, char *argv[]) {
     ssh = std::string_view(argv[1]) == "--ssh" || std::string_view(argv[1]) == "ssh";
     daemon = std::string_view(argv[1]) == "--daemon" || std::string_view(argv[1]) == "daemon";
     openurl = std::string_view(argv[1]) == "openurl";
+    command = std::string_view(argv[1]) == "command";
   }
 
   if (notification && (argc < 3 || argc > 4)) {
@@ -184,11 +187,11 @@ int main(int argc, char *argv[]) {
 
   // get clipboard
   if (get) {
-    if (!WriteBinary(fd, ClippyCommand::RETRIEVE_CLIPBOARD))
+    if (!WriteBinary(fd, uint8_t(ClippyCommand::RETRIEVE_CLIPBOARD)))
       return -1;
     bool good = true;
-    uint32_t command = ReadBinary(fd, ClippyCommand::NONE, good);
-    if (command == ClippyCommand::CLIPBOARD_CONTENTS) {
+    uint32_t c = ReadBinary(fd, uint8_t(ClippyCommand::NONE), good);
+    if (c == ClippyCommand::CLIPBOARD_CONTENTS) {
       std::string clipboard = ReadBinary(fd, std::string(), good);
       if (!good)
         return -1;
@@ -201,7 +204,7 @@ int main(int argc, char *argv[]) {
   }
   if (set) {
     // set clipboard
-    if (!WriteBinary(fd, ClippyCommand::SET_CLIPBOARD))
+    if (!WriteBinary(fd, uint8_t(ClippyCommand::SET_CLIPBOARD)))
       return -1;
     bool eof = false;
     bool error = false;
@@ -210,23 +213,76 @@ int main(int argc, char *argv[]) {
       return -1;
     if (!WriteBinary(fd, retval))
       return -1;
+    // FIXME: check message back, if setting the clipboard succeeded
     return 0;
   }
   if (notification) {
-    if (!WriteBinary(fd, ClippyCommand::SHOW_NOTIFICATION))
+    if (!WriteBinary(fd, uint8_t(ClippyCommand::SHOW_NOTIFICATION)))
       return -1;
     if (!WriteBinary(fd, argv[2]))
       return -1;
     if (!WriteBinary(fd, argc >= 4 ? argv[3] : ""))
       return -1;
+    // FIXME: check message back, if notification was shown
     return 0;
   }
   if (openurl) {
-    if (!WriteBinary(fd, ClippyCommand::OPEN_URL))
+    if (!WriteBinary(fd, uint8_t(ClippyCommand::OPEN_URL)))
       return -1;
     if (!WriteBinary(fd, argv[2]))
       return -1;
+    // FIXME: check message back, if url was opened
     return 0;
+  }
+  if (command) {
+    //std::cerr << "command" << std::endl;
+    if (!WriteBinary(fd, uint8_t(ClippyCommand::LOCAL_CMD)))
+      return -1;
+    std::vector<std::string> c;
+    for (int i = 2; i < argc; ++i)
+      c.push_back(argv[i]);
+    if (!WriteBinary(fd, c))
+      return -1;
+    //std::cerr << "going into proxy loop with fd=" << fd << std::endl;
+    int status = 0;
+    bool running = true;
+    ProxyState commandIn {STDIN_FILENO, fd, [](const std::string& in) -> uint32_t { return uint32_t(in.size()); }, [](std::string in) -> std::tuple<std::string,bool> {
+      uint32_t length = 1 + uint32_t(in.size());
+      length = ntoh(length);
+      char cmd[2] = {char(in.size() > 0 ? ClippyCommand::LOCAL_CMD_STDIN : ClippyCommand::LOCAL_CMD_STDIN_CLOSE), 0};
+      return {std::string(reinterpret_cast<const char*>(&length), sizeof(length)) + std::string(cmd) + in, true};
+    }};
+    ProxyState commandOut {fd, STDOUT_FILENO, ProtocolMessageLength, [&status, &running](std::string in) -> std::tuple<std::string,bool> {
+      //std::cerr << "got message of " << in.size() << std::endl;
+      if (in.size() < 5 || in[4] == ClippyCommand::LOCAL_CMD_STDOUT_CLOSE) {
+        //std::cerr << "closing stdout from remote connection" << std::endl;
+        return {{}, true};
+      }
+      if (in[4] == ClippyCommand::LOCAL_CMD_STDOUT) {
+        //std::cerr << "got stdout of " << in.size()-5 << std::endl;
+        return {in.substr(5), true};
+      } else if (in[4] == ClippyCommand::LOCAL_CMD_STDERR) {
+        //std::cerr << "got stderr of " << in.size()-5 << std::endl;
+        // we assume STDERR is smaller, and does not need to be buffered
+        std::cerr << in.substr(5);
+      } else if (in[4] == ClippyCommand::LOCAL_CMD_STATUS) {
+        status = uint8_t(in[5]);
+        //std::cerr << "got status of remote command: " << status << std::endl;
+        running = false;
+        return {{}, false};
+      }
+      return {{}, true};
+    }, [&running]{ if (running) { exit(-1); }}}; // lost connection too early, so error exit
+    auto remaining = Proxy({&commandIn, &commandOut}, [&running](size_t count) {
+      //std::cerr << "wait loop for " << count << " fds" << std::endl;
+      return count >= 1 && running; });
+    int s = fcntl(STDOUT_FILENO, F_GETFL, 0);
+    ENSURE(fcntl(STDOUT_FILENO, F_SETFL, s & ~O_NONBLOCK) == 0);
+    //std::cerr << "writing remaining " << commandOut.converted.size() << " bytes" << std::endl;
+    auto& r = remaining[STDOUT_FILENO];
+    if (SafeWrite(STDOUT_FILENO, r.data(), r.size()) != r.size())
+      return -1;
+    exit(status);
   }
 
   return 0;

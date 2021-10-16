@@ -44,6 +44,17 @@ if (ALL_WARNINGS)
 	endif()
 endif (ALL_WARNINGS)
 
+SET(SANITIZER "" CACHE STRING "Apply sanitizer")
+if (SANITIZER)
+	SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer -fsanitize=${SANITIZER} -g -fno-optimize-sibling-calls -O1")
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fsanitize=${SANITIZER} -g -fno-optimize-sibling-calls -O1")
+	MESSAGE("using sanitizer ${SANITIZER}")
+	if (SANITIZER STREQUAL "address")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize-address-use-after-scope")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize-address-use-after-scope")
+	endif()
+endif (SANITIZER)
+
 set(src
   lib.cpp
   simple-raw.cpp

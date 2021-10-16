@@ -1,4 +1,5 @@
 #include "simple-raw.h"
+#include "lib-common.h"
 
 #if defined(__linux__)
 #  include <arpa/inet.h>
@@ -96,6 +97,9 @@
   return {retval, errno};
 }
 
+bool WriteBinary(int out, uint8_t number) {
+  return sizeof(number) == SafeWrite(out, reinterpret_cast<char*>(&number), sizeof(number));
+}
 bool WriteBinary(int out, uint32_t number) {
   number = htonl(number);
   return sizeof(number) == SafeWrite(out, reinterpret_cast<char*>(&number), sizeof(number));
@@ -110,6 +114,11 @@ bool WriteBinary(int out, const char* str, uint32_t length) {
   return length == SafeWrite(out, str, length);
 }
 
+uint8_t ReadBinary(int in, uint8_t defaultValue, bool& good) {
+  uint8_t number = 0;
+  auto [bytes,err] = SafeRead(in, reinterpret_cast<char*>(&number), sizeof(number));
+  return (good = (good && err == 0 && bytes == sizeof(number))) ? number : defaultValue;
+}
 uint32_t ReadBinary(int in, uint32_t defaultValue, bool& good) {
   uint32_t number = 0;
   auto [bytes,err] = SafeRead(in, reinterpret_cast<char*>(&number), sizeof(number));
@@ -131,4 +140,17 @@ std::string ReadBinary(int in, const std::string& defaultValue, bool& good) {
   auto [bytes,err] = SafeRead(in, retval.data(), length);
   //std::cerr << "readBinary(String " << length << ") -> " << bytes << std::endl;
   return (good = (good && err == 0 && bytes == length)) ? retval : defaultValue;
+}
+
+uint8_t ntoh(uint8_t n) {
+	return n;
+}
+uint16_t ntoh(uint16_t n) {
+	return OLD_STYLE_CAST(ntohs(n));
+}
+uint32_t ntoh(uint32_t n) {
+	return OLD_STYLE_CAST(ntohl(n));
+}
+uint64_t ntoh(uint64_t n) {
+	return OLD_STYLE_CAST(ntohll(n));
 }
