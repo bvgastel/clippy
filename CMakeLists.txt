@@ -26,6 +26,7 @@ if (ALL_WARNINGS)
 		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-alloca") # for now disabled, sqlite3 integration (only place alloca is used) is possibly removed anyway
 		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-undefined-func-template") # goes wrong with Prometheus imports (goes wrong on compile time)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas -Wno-undef")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-reserved-identifier") # avoid _StartsWithCapital warnings (because that is reserved)
 	elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Woverloaded-virtual") # -Weffc++
 		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas")
