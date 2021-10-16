@@ -49,6 +49,12 @@ ubuntu-hirsute-amd64:
 ubuntu-hirsute-arm64:
   extends: .ubuntu-hirsute-arm64-on-amd64
 
+ubuntu-impish-amd64:
+  extends: .ubuntu-impish-amd64
+
+ubuntu-impish-arm64:
+  extends: .ubuntu-impish-arm64-on-amd64
+
 raspbian-buster-armhf:
   extends: .raspbian-buster-armhf
 
