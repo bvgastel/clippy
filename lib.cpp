@@ -192,6 +192,20 @@ bool IsOnWSL() {
   return IsFile("/proc/sys/fs/binfmt_misc/WSLInterop");
 }
 
+bool IsWayland(std::vector<int> closeAfterFork) {
+  if (getenv("TMUX")) {
+    // if empty, then command is assumed to have failed
+    auto display = GetTMUXVariable("WAYLAND_DISPLAY", closeAfterFork);
+    if (display && display->size() > 0)
+      return true;
+    return false;
+  }
+  auto display = getenv("WAYLAND_DISPLAY");
+  if (display && strlen(display) > 0)
+    return true;
+  return false;
+}
+
 std::optional<std::string> GetTMUXVariable(std::string variable, std::vector<int> closeAfterFork) {
   std::vector<std::string> getClipboardCommand = {"tmux", "show-environment", variable};
   auto [wfd, rfd, efd, pid] = ExecRedirected(getClipboardCommand, closeAfterFork);
@@ -220,14 +234,20 @@ bool IsLocalSession(std::vector<int> closeAfterFork) {
   if (getenv("TMUX")) {
     // if empty, then command is assumed to have failed
     auto display = GetTMUXVariable("DISPLAY", closeAfterFork);
-    return display && display->size() > 0;
+    if (display && display->size() > 0)
+      return true;
+    display = GetTMUXVariable("WAYLAND_DISPLAY", closeAfterFork);
+    if (display && display->size() > 0)
+      return true;
+    return false;
   }
   // detect if it is a X11 session by checking if DISPLAY is set
   auto display = getenv("DISPLAY");
   if (display && strlen(display) > 0)
     return true;
-  // if (getenv("WAYLAND_DISPLAY"))
-  //   return true;
+  display = getenv("WAYLAND_DISPLAY");
+  if (display && strlen(display) > 0)
+    return true;
   return false;
 }
 
@@ -247,6 +267,9 @@ std::string GetClipboard(std::vector<int> closeAfterFork) {
   std::vector<std::string> getClipboardCommand = {"pbpaste"};
 #else
   std::vector<std::string> getClipboardCommand = {"xsel", "--clipboard", "--output"};
+  if (IsWayland(closeAfterFork)) {
+    getClipboardCommand = {"wl-paste"};
+  }
   wsl = IsOnWSL();
   if (wsl) {
     getClipboardCommand = {"powershell.exe", "Get-Clipboard"};
@@ -277,6 +300,9 @@ bool SetClipboard(std::string clipboard, std::vector<int> closeAfterFork) {
   std::vector<std::string> setClipboardCommand = {"pbcopy"};
 #else
   std::vector<std::string> setClipboardCommand = {"xsel", "--clipboard", "--input"};
+  if (IsWayland(closeAfterFork)) {
+    setClipboardCommand = {"wl-copy"};
+  }
   if (IsOnWSL()) {
     setClipboardCommand = {"clip.exe"};
   }
