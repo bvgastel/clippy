@@ -268,7 +268,7 @@ std::string GetClipboard(std::vector<int> closeAfterFork) {
 #else
   std::vector<std::string> getClipboardCommand = {"xsel", "--clipboard", "--output"};
   if (IsWayland(closeAfterFork)) {
-    getClipboardCommand = {"wl-paste"};
+    getClipboardCommand = {"wl-paste", "-n"};
   }
   wsl = IsOnWSL();
   if (wsl) {
