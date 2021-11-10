@@ -5,7 +5,7 @@ Clippy is a tool to interact with your desktop environment from a remote SSH ses
 This is an alternative to [lemonade](https://github.com/lemonade-command/lemonade). However, the security on shared servers is improved as only the current user can share the link to the desktop.
 
 Integrates with:
-- Linux/FreeBSD (X11/Wayland);
+- Linux/FreeBSD (for X11 needs package `xsel`, for Wayland needs package `wl-clipboard`);
 - Windows if run under WSL;
 - macOS.
 
