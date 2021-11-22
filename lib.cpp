@@ -217,6 +217,9 @@ std::optional<std::string> GetTMUXVariable(std::string variable, std::vector<int
   error |= retval.size() == 1024*1024 && !eof;
   close(rfd);
 
+  int status = 0;
+  while (waitpid(pid, &status, 0) < 0 && errno == EINTR);
+
   if (!error && eof) {
     // tmux outputs "-DISPLAY" if variable is not found, and "DISPLAY=foobar" if variable is found
     auto pos = retval.find("=");
@@ -290,6 +293,13 @@ std::string GetClipboard(std::vector<int> closeAfterFork) {
   if (wsl) {
     retval = ReplaceAll(retval, "\r\n", "\n");
   }
+  //
+  int status = 0;
+  while (waitpid(pid, &status, 0) < 0 && errno == EINTR);
+  if (status != 0) {
+    std::cerr << "clippy: error running command " << getClipboardCommand[0] << std::endl;
+    retval = "[clippy: error running command " + getClipboardCommand[0] + "]";
+  }
   // better to return nothing than half an clipboard
   // this way the user knows something went wrong
   return !error ? retval : std::string();
@@ -312,6 +322,10 @@ bool SetClipboard(std::string clipboard, std::vector<int> closeAfterFork) {
   close(efd);
   auto bytes = SafeWrite(wfd, clipboard.c_str(), clipboard.size());
   close(wfd);
+  while (waitpid(pid, &status, 0) < 0 && errno == EINTR);
+  if (status != 0) {
+    std::cerr << "clippy: error running command " << getClipboardCommand[0] << std::endl;
+  }
   return bytes == clipboard.size();
 }
 
