@@ -322,9 +322,10 @@ bool SetClipboard(std::string clipboard, std::vector<int> closeAfterFork) {
   close(efd);
   auto bytes = SafeWrite(wfd, clipboard.c_str(), clipboard.size());
   close(wfd);
+  int status = 0;
   while (waitpid(pid, &status, 0) < 0 && errno == EINTR);
   if (status != 0) {
-    std::cerr << "clippy: error running command " << getClipboardCommand[0] << std::endl;
+    std::cerr << "clippy: error running command " << setClipboardCommand[0] << std::endl;
   }
   return bytes == clipboard.size();
 }

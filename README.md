@@ -43,15 +43,16 @@ Some software needs custom config options. Setup depends on the software you are
 
 ### sshd (on some platforms set automatically)
 
+On modern Debian (>= bullseye), Ubuntu (>= focal), and Raspbian (>= bullseye), these settings are automatically included when you install `clippy`. 
+
 Your `sshd_config` on the server should have:
 ```
 StreamLocalBindUnlink yes
 AcceptEnv LC_CLIPPY
 ```
 
-On modern Debian, Ubuntu, and Raspbian, these settings are automatically included when you install `clippy`.
-On FreeBSD add `Include /usr/local/etc/ssh/sshd_config.d/*` to your `/etc/ssh/sshd_config`.
 On Linux add `Include /etc/ssh/sshd_config.d/*` to your `/etc/ssh/sshd_config`.
+On FreeBSD add `Include /usr/local/etc/ssh/sshd_config.d/*` to your `/etc/ssh/sshd_config`.
 
 ### tmux
 Use with `tmux-yank` (in `~/.tmux.conf`):
@@ -101,6 +102,10 @@ For more custom `neovim` clipboard settings, see `:help g:clipboard`.
 - [ ] view file on desktop
 - [ ] copy file to/from desktop
 - [ ] support rendering part of a i3statusbar on desktop: CPU usage, memory usage, custom things, work queue like nq status (with remote queue)
+
+## To Do
+- [ ] improve error handling: errors in the clippy daemon (such as xsel/wl-paste not found) should be propagated to clippy clients (so they can exit with a non zero exit code)
+- [ ] 
 
 ## Alternatives
 
