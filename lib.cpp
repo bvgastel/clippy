@@ -271,7 +271,7 @@ std::string GetClipboard(std::vector<int> closeAfterFork) {
 #else
   std::vector<std::string> getClipboardCommand = {"xsel", "--clipboard", "--output"};
   if (IsWayland(closeAfterFork)) {
-    getClipboardCommand = {"wl-paste", "-n"};
+    getClipboardCommand = {"wl-paste", "-t", "text/plain", "-n"}; // text/plain needed for long json inputs
   }
   wsl = IsOnWSL();
   if (wsl) {
