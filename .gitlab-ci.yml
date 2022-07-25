@@ -10,15 +10,6 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   NAME: "clippy"
 
-debian-buster-amd64:
-  extends: .debian-buster-amd64
-
-debian-buster-armhf:
-  extends: .debian-buster-armhf-on-amd64
-
-debian-buster-arm64:
-  extends: .debian-buster-arm64-on-amd64
-
 debian-bullseye-amd64:
   extends: .debian-bullseye-amd64
 
@@ -43,14 +34,11 @@ ubuntu-focal-amd64:
 ubuntu-focal-arm64:
   extends: .ubuntu-focal-arm64-on-amd64
 
-ubuntu-impish-amd64:
-  extends: .ubuntu-impish-amd64
+ubuntu-jammy-amd64:
+  extends: .ubuntu-jammy-amd64
 
-ubuntu-impish-arm64:
-  extends: .ubuntu-impish-arm64-on-amd64
-
-raspbian-buster-armhf:
-  extends: .raspbian-buster-armhf
+ubuntu-jammy-arm64:
+  extends: .ubuntu-jammy-arm64-on-amd64
 
 raspbian-bullseye-armhf:
   extends: .raspbian-bullseye-armhf

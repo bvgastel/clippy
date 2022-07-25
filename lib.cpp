@@ -271,7 +271,7 @@ std::string GetClipboard(std::vector<int> closeAfterFork) {
 #else
   std::vector<std::string> getClipboardCommand = {"xsel", "--clipboard", "--output"};
   if (IsWayland(closeAfterFork)) {
-    getClipboardCommand = {"wl-paste", "-t", "text", "-n", }; // text needed for long json inputs
+    getClipboardCommand = {"wl-paste", "-t", "text/plain", "-n", }; // text needed for long json inputs
   }
   wsl = IsOnWSL();
   if (wsl) {
@@ -311,7 +311,7 @@ bool SetClipboard(std::string clipboard, std::vector<int> closeAfterFork) {
 #else
   std::vector<std::string> setClipboardCommand = {"xsel", "--clipboard", "--input"};
   if (IsWayland(closeAfterFork)) {
-    setClipboardCommand = {"wl-copy", "-t", "text", }; // text needed for long json inputs
+    setClipboardCommand = {"wl-copy", "-t", "text/plain", }; // text needed for long json inputs
   }
   if (IsOnWSL()) {
     setClipboardCommand = {"clip.exe"};
