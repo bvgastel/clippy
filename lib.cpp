@@ -192,6 +192,10 @@ bool IsOnWSL() {
   return IsFile("/proc/sys/fs/binfmt_misc/WSLInterop");
 }
 
+bool IsTermuxOnAndroid() {
+  return getenv("TERMUX_API_VERSION") != nullptr;
+}
+
 bool IsWayland(std::vector<int> closeAfterFork) {
   if (getenv("TMUX")) {
     // if empty, then command is assumed to have failed
@@ -251,7 +255,7 @@ bool IsLocalSession(std::vector<int> closeAfterFork) {
   display = getenv("WAYLAND_DISPLAY");
   if (display && strlen(display) > 0)
     return true;
-  return false;
+  return IsTermuxOnAndroid();
 }
 
 // from https://stackoverflow.com/questions/2896600/how-to-replace-all-occurrences-of-a-character-in-string
@@ -276,6 +280,9 @@ std::string GetClipboard(std::vector<int> closeAfterFork) {
   wsl = IsOnWSL();
   if (wsl) {
     getClipboardCommand = {"powershell.exe", "Get-Clipboard"};
+  }
+  if (IsTermuxOnAndroid()) {
+    getClipboardCommand = {"termux-clipboard-get"};
   }
 #endif
   auto [wfd, rfd, efd, pid] = ExecRedirected(getClipboardCommand, closeAfterFork);
@@ -315,6 +322,9 @@ bool SetClipboard(std::string clipboard, std::vector<int> closeAfterFork) {
   }
   if (IsOnWSL()) {
     setClipboardCommand = {"clip.exe"};
+  }
+  if (IsTermuxOnAndroid()) {
+    setClipboardCommand = {"termux-clipboard-set"};
   }
 #endif
   auto [wfd, rfd, efd, pid] = ExecRedirected(setClipboardCommand, closeAfterFork);
