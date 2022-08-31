@@ -6,6 +6,7 @@ This is an alternative to [lemonade](https://github.com/lemonade-command/lemonad
 
 Integrates with:
 - Linux/FreeBSD (for X11 needs package `xsel`, for Wayland needs package `wl-clipboard`);
+- Termux on Android;
 - Windows if run under WSL;
 - macOS.
 
@@ -20,7 +21,19 @@ brew install --HEAD bvgastel/clippy/clippy
 Update with `brew reinstall bvgastel/clippy/clippy`.
 
 
-To build the project from the source, you need cmake and a C++ compiler.
+To build the project from the source, you need cmake and a C++ compiler:
+```
+cmake .
+cmake --build .
+cmake --install .
+```
+
+On Termux (Android) use:
+```
+cmake -DCMAKE_INSTALL_PREFIX=$PREFIX .
+cmake --build .
+cmake --install .
+```
 
 ## Usage
 
