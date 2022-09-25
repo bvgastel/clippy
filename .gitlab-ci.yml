@@ -49,7 +49,7 @@ freebsd13-package-amd64:
 release:
   stage: deploy
   only: 
-  - master
+  - main
   tags: [freebsd-amd64-13]
   script:
   - >
