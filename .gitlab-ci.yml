@@ -48,7 +48,7 @@ freebsd13-package-amd64:
 
 release:
   stage: deploy
-  #only: stable
+  only: master
   tags: [freebsd-amd64-13]
   script:
   - >
