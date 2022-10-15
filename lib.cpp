@@ -192,6 +192,10 @@ bool IsOnWSL() {
   return IsFile("/proc/sys/fs/binfmt_misc/WSLInterop");
 }
 
+bool IsTermuxOnAndroid() {
+  return getenv("TERMUX_API_VERSION") != nullptr;
+}
+
 bool IsWayland(std::vector<int> closeAfterFork) {
   if (getenv("TMUX")) {
     // if empty, then command is assumed to have failed
@@ -216,6 +220,9 @@ std::optional<std::string> GetTMUXVariable(std::string variable, std::vector<int
   std::string retval = Read(rfd, eof, error, 1024*1024);
   error |= retval.size() == 1024*1024 && !eof;
   close(rfd);
+
+  int status = 0;
+  while (waitpid(pid, &status, 0) < 0 && errno == EINTR);
 
   if (!error && eof) {
     // tmux outputs "-DISPLAY" if variable is not found, and "DISPLAY=foobar" if variable is found
@@ -248,7 +255,7 @@ bool IsLocalSession(std::vector<int> closeAfterFork) {
   display = getenv("WAYLAND_DISPLAY");
   if (display && strlen(display) > 0)
     return true;
-  return false;
+  return IsTermuxOnAndroid();
 }
 
 // from https://stackoverflow.com/questions/2896600/how-to-replace-all-occurrences-of-a-character-in-string
@@ -268,27 +275,43 @@ std::string GetClipboard(std::vector<int> closeAfterFork) {
 #else
   std::vector<std::string> getClipboardCommand = {"xsel", "--clipboard", "--output"};
   if (IsWayland(closeAfterFork)) {
-    getClipboardCommand = {"wl-paste", "-n"};
+    getClipboardCommand = {"wl-paste", "-t", "text", "-n", }; // text-modi needed for long json inputs. On ChromeOS "-t text" is needed (not "-t text/plain").
   }
   wsl = IsOnWSL();
   if (wsl) {
     getClipboardCommand = {"powershell.exe", "Get-Clipboard"};
   }
+  if (IsTermuxOnAndroid()) {
+    getClipboardCommand = {"termux-clipboard-get"};
+  }
 #endif
   auto [wfd, rfd, efd, pid] = ExecRedirected(getClipboardCommand, closeAfterFork);
   close(wfd);
-  close(efd);
   bool eof = false;
   bool error = false;
   std::string retval = Read(rfd, eof, error, 1024*1024);
   error |= retval.size() == 1024*1024 && !eof;
   close(rfd);
+ 
+  bool error2 = false;
+  std::string errmsg = Read(efd, eof, error2, 1024);
+  close(efd);
+
   if (wsl) {
     // `powershell.exe Get-Clipboard` appends \r\n to output, get rid of it
     retval = retval.size() >= 2 ? retval.substr(0, retval.size()-2) : std::string();
   }
   if (wsl) {
     retval = ReplaceAll(retval, "\r\n", "\n");
+  }
+  
+  int status = 0;
+  while (waitpid(pid, &status, 0) < 0 && errno == EINTR);
+  if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+    std::cerr << "clippy: error running command " << getClipboardCommand[0] << ": " << WEXITSTATUS(status) << std::endl;
+    std::cerr << "got error: " << errmsg << std::endl;
+
+    retval = "[clippy: error running command " + getClipboardCommand[0] + "]\n[" + errmsg + "]";
   }
   // better to return nothing than half an clipboard
   // this way the user knows something went wrong
@@ -301,17 +324,32 @@ bool SetClipboard(std::string clipboard, std::vector<int> closeAfterFork) {
 #else
   std::vector<std::string> setClipboardCommand = {"xsel", "--clipboard", "--input"};
   if (IsWayland(closeAfterFork)) {
-    setClipboardCommand = {"wl-copy"};
+    setClipboardCommand = {"wl-copy", "-t", "text/plain", }; // text needed for long json inputs
   }
   if (IsOnWSL()) {
     setClipboardCommand = {"clip.exe"};
   }
+  if (IsTermuxOnAndroid()) {
+    setClipboardCommand = {"termux-clipboard-set"};
+  }
 #endif
   auto [wfd, rfd, efd, pid] = ExecRedirected(setClipboardCommand, closeAfterFork);
   close(rfd);
-  close(efd);
   auto bytes = SafeWrite(wfd, clipboard.c_str(), clipboard.size());
   close(wfd);
+
+  bool eof = false;
+  bool error = false;
+  std::string errmsg = Read(efd, eof, error, 1024);
+  close(efd);
+
+  int status = 0;
+  while (waitpid(pid, &status, 0) < 0 && errno == EINTR);
+  if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+    std::cerr << "clippy: error running command " << setClipboardCommand[0] << ": " << WEXITSTATUS(status) << std::endl;
+    std::cerr << "got error: " << errmsg << std::endl;
+  }
+  // FIXME: return error message if needed
   return bytes == clipboard.size();
 }
 

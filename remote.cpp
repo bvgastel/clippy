@@ -95,9 +95,17 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Usage: %s openurl [url]\n", argv[0]);
     return -1;
   }
+  std::string tmpdir = "/tmp/";
+  {
+    auto tmp = getenv("TMPDIR");
+    if (tmp) {
+      tmpdir = std::string(tmp) + "/";
+    }
+  }
+
 
   if (daemon) {
-    std::string local_socket_path = "/tmp/clipboardlocal." + GetUsername();
+    std::string local_socket_path = tmpdir + "clipboardlocal." + GetUsername();
     Server(local_socket_path);
   }
 
@@ -113,7 +121,7 @@ int main(int argc, char *argv[]) {
       args.push_back("-R"); args.push_back(remote_socket_path + ":" + *nestedRemoteSession);
     } else {
       // regular
-      std::string local_socket_path = "/tmp/clipboardlocal." + GetUsername();
+      std::string local_socket_path = tmpdir + "clipboardlocal." + GetUsername();
 
       // if no clippy daemon is active on local host, start one
       if (!IsSocket(local_socket_path) || !Active(local_socket_path)) {
