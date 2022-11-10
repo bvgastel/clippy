@@ -393,7 +393,7 @@ bool OpenURL(std::string url, std::vector<int> closeAfterFork) {
 #else
   std::vector<std::string> command = {"xdg-open", url};
   if (IsOnWSL()) {
-    command = {"cmd.exe", "/C", "start", url};
+    command = {"powershell.exe", "start", url};
   }
 #endif
   auto [wfd, rfd, efd, pid] = ExecRedirected(command, closeAfterFork);
