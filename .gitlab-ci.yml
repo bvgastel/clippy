@@ -46,3 +46,11 @@ raspbian-bullseye-armhf:
 freebsd13-package-amd64:
   extends: .freebsd13-package-amd64
 
+release:
+  stage: deploy
+  only: 
+  - main
+  tags: [freebsd-amd64-13]
+  script:
+  - >
+    curl --header 'Content-Type: application/json' --header "JOB-TOKEN: $CI_JOB_TOKEN" --data "{ \"name\": \"Release v1.$CI_PIPELINE_IID\", \"tag_name\": \"v1.$CI_PIPELINE_IID\", \"ref\": \"$CI_COMMIT_REF_NAME\", \"description\": \"Automatic release from CI.\" }" --request POST "https://bitpowder.com:2443/api/v4/projects/68/releases"

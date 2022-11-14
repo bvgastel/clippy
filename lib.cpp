@@ -275,7 +275,7 @@ std::string GetClipboard(std::vector<int> closeAfterFork) {
 #else
   std::vector<std::string> getClipboardCommand = {"xsel", "--clipboard", "--output"};
   if (IsWayland(closeAfterFork)) {
-    getClipboardCommand = {"wl-paste", "-t", "text/plain", "-n", }; // text needed for long json inputs
+    getClipboardCommand = {"wl-paste", "-t", "text", "-n", }; // text-modi needed for long json inputs. On ChromeOS "-t text" is needed (not "-t text/plain").
   }
   wsl = IsOnWSL();
   if (wsl) {
@@ -287,12 +287,16 @@ std::string GetClipboard(std::vector<int> closeAfterFork) {
 #endif
   auto [wfd, rfd, efd, pid] = ExecRedirected(getClipboardCommand, closeAfterFork);
   close(wfd);
-  close(efd);
   bool eof = false;
   bool error = false;
   std::string retval = Read(rfd, eof, error, 1024*1024);
   error |= retval.size() == 1024*1024 && !eof;
   close(rfd);
+ 
+  bool error2 = false;
+  std::string errmsg = Read(efd, eof, error2, 1024);
+  close(efd);
+
   if (wsl) {
     // `powershell.exe Get-Clipboard` appends \r\n to output, get rid of it
     retval = retval.size() >= 2 ? retval.substr(0, retval.size()-2) : std::string();
@@ -300,12 +304,14 @@ std::string GetClipboard(std::vector<int> closeAfterFork) {
   if (wsl) {
     retval = ReplaceAll(retval, "\r\n", "\n");
   }
-  //
+  
   int status = 0;
   while (waitpid(pid, &status, 0) < 0 && errno == EINTR);
-  if (WEXITSTATUS(status) != 0) {
-    std::cerr << "clippy: error running command " << getClipboardCommand[0] << std::endl;
-    retval = "[clippy: error running command " + getClipboardCommand[0] + "]";
+  if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+    std::cerr << "clippy: error running command " << getClipboardCommand[0] << ": " << WEXITSTATUS(status) << std::endl;
+    std::cerr << "got error: " << errmsg << std::endl;
+
+    retval = "[clippy: error running command " + getClipboardCommand[0] + "]\n[" + errmsg + "]";
   }
   // better to return nothing than half an clipboard
   // this way the user knows something went wrong
@@ -329,14 +335,21 @@ bool SetClipboard(std::string clipboard, std::vector<int> closeAfterFork) {
 #endif
   auto [wfd, rfd, efd, pid] = ExecRedirected(setClipboardCommand, closeAfterFork);
   close(rfd);
-  close(efd);
   auto bytes = SafeWrite(wfd, clipboard.c_str(), clipboard.size());
   close(wfd);
+
+  bool eof = false;
+  bool error = false;
+  std::string errmsg = Read(efd, eof, error, 1024);
+  close(efd);
+
   int status = 0;
   while (waitpid(pid, &status, 0) < 0 && errno == EINTR);
-  if (status != 0) {
-    std::cerr << "clippy: error running command " << setClipboardCommand[0] << std::endl;
+  if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+    std::cerr << "clippy: error running command " << setClipboardCommand[0] << ": " << WEXITSTATUS(status) << std::endl;
+    std::cerr << "got error: " << errmsg << std::endl;
   }
+  // FIXME: return error message if needed
   return bytes == clipboard.size();
 }
 
@@ -380,7 +393,7 @@ bool OpenURL(std::string url, std::vector<int> closeAfterFork) {
 #else
   std::vector<std::string> command = {"xdg-open", url};
   if (IsOnWSL()) {
-    command = {"cmd.exe", "/C", "start", url};
+    command = {"powershell.exe", "start", url};
   }
 #endif
   auto [wfd, rfd, efd, pid] = ExecRedirected(command, closeAfterFork);

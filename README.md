@@ -74,6 +74,7 @@ Use with `tmux-yank` (in `~/.tmux.conf`):
 bind ] run "tmux set-buffer \"$(clippy get)\"; tmux paste-buffer"
 set -g @override_copy_command 'clippy set'
 set-option -g -a update-environment "LC_CLIPPY"
+set-option -g -a update-environment "WAYLAND_DISPLAY"
 ```
 
 The basic version, without any plugins (in `~/.tmux.conf`):
@@ -83,6 +84,7 @@ bind ] run "tmux set-buffer \"$(clippy get)\"; tmux paste-buffer"
 bind -T copy-mode-vi y run "tmux save-buffer - | clippy set"
 bind -T copy-mode-emacs y run "tmux save-buffer - | clippy set"
 set-option -g -a update-environment "LC_CLIPPY"
+set-option -g -a update-environment "WAYLAND_DISPLAY"
 ```
 
 ### neovim
