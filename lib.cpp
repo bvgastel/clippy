@@ -303,7 +303,7 @@ std::string GetClipboard(std::vector<int> closeAfterFork) {
   //
   int status = 0;
   while (waitpid(pid, &status, 0) < 0 && errno == EINTR);
-  if (status != 0) {
+  if (WEXITSTATUS(status) != 0) {
     std::cerr << "clippy: error running command " << getClipboardCommand[0] << std::endl;
     retval = "[clippy: error running command " + getClipboardCommand[0] + "]";
   }
